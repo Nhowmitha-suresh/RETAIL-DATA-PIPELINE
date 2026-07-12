@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Retail Intelligence Dashboard</title>
+    <style>
+      :root { color-scheme: dark; --bg:#07111f; --panel:#0f1b2c; --accent:#31d0aa; --text:#f5f7fa; --muted:#8ea0b8; }
+      * { box-sizing: border-box; }
+      body { margin:0; font-family: Inter,Segoe UI,Roboto,sans-serif; background:linear-gradient(135deg,#07111f,#13253d); color:var(--text); }
+      .shell { max-width: 1200px; margin:0 auto; padding:24px; }
+      .hero { background:rgba(15,27,44,.92); border:1px solid rgba(255,255,255,.08); border-radius:24px; padding:24px; box-shadow:0 20px 45px rgba(0,0,0,.25); }
+      .hero h1 { margin:0 0 8px; font-size:2rem; }
+      .hero p { margin:0; color:var(--muted); }
+      .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-top:20px; }
+      .card { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:18px; padding:16px; }
+      .metric { font-size:1.6rem; font-weight:700; margin-top:8px; }
+      .muted { color:var(--muted); font-size:.95rem; }
+      form { margin-top:20px; display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); }
+      input, select, button { width:100%; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:#0b1422; color:var(--text); }
+      button { background:linear-gradient(135deg,var(--accent),#2f7dff); border:none; cursor:pointer; font-weight:700; }
+      .result { margin-top:16px; padding:16px; border-radius:16px; background:rgba(49,208,170,.15); border:1px solid rgba(49,208,170,.25); }
+      .footer { margin-top:20px; text-align:center; color:var(--muted); font-size:.9rem; }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <section class="hero">
+        <h1>Retail Intelligence Platform</h1>
+        <p>Monitor demand, tune promotions, and forecast sales with a polished intelligent workflow.</p>
+        <div class="grid">
+          <div class="card"><div class="muted">Rows in dataset</div><div class="metric">{{ summary.total_rows }}</div></div>
+          <div class="card"><div class="muted">Total sales</div><div class="metric">${{ summary.total_sales }}</div></div>
+          <div class="card"><div class="muted">Avg. sales</div><div class="metric">${{ summary.average_sales }}</div></div>
+          <div class="card"><div class="muted">Top region</div><div class="metric">{{ summary.top_region }}</div></div>
+        </div>
+      </section>
+
+      <section class="card" style="margin-top:20px;">
+        <h3>Sales Forecasting</h3>
+        <form id="forecast-form">
+          <select name="region"><option>North</option><option>South</option><option>East</option><option>West</option></select>
+          <select name="category"><option>Electronics</option><option>Home</option><option>Fashion</option><option>Groceries</option></select>
+          <select name="store"><option>Store A</option><option>Store B</option><option>Store C</option></select>
+          <input name="month" type="number" min="1" max="12" value="7" />
+          <select name="promotion"><option value="true">Yes</option><option value="false">No</option></select>
+          <input name="discount" type="number" min="0" max="30" value="12" />
+          <input name="customer_count" type="number" min="1" value="85" />
+          <select name="season"><option>Spring</option><option>Summer</option><option>Fall</option><option>Winter</option></select>
+          <button type="submit">Predict Sales</button>
+        </form>
+        <div id="result" class="result" hidden></div>
+      </section>
+      <div class="footer">Built with FastAPI, scikit-learn, pandas, and a responsive dashboard UI.</div>
+    </div>
+    <script>
+      const form = document.getElementById('forecast-form');
+      const result = document.getElementById('result');
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const data = Object.fromEntries(new FormData(form).entries());
+        data.promotion = data.promotion === 'true';
+        data.month = Number(data.month);
+        data.discount = Number(data.discount);
+        data.customer_count = Number(data.customer_count);
+        const response = await fetch('/api/predict', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        const json = await response.json();
+        result.hidden = false;
+        result.innerHTML = `<strong>Predicted sales:</strong> $${json.predicted_sales} <br><strong>Confidence:</strong> ${json.confidence}`;
+      });
+    </script>
+  </body>
+</html>
