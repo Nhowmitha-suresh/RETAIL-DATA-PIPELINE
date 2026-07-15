@@ -10,8 +10,10 @@ from .models import Base
 
 DEFAULT_SQLITE_URL = 'sqlite+aiosqlite:///./data/retail.db'
 
+# Public engine reference expected by other modules (e.g. api.main)
 _engine: AsyncEngine | None = None
 _ENGINE_URL: str | None = None
+engine: AsyncEngine | None = None
 
 
 def _make_engine(url: str) -> AsyncEngine:
@@ -27,9 +29,14 @@ def init_engine(url: str | None = None) -> AsyncEngine:
     if url is None:
         url = get_database_url()
     if _engine is not None and _ENGINE_URL == url:
+        # ensure public alias is set
+        global engine
+        engine = _engine
         return _engine
     _engine = _make_engine(url)
     _ENGINE_URL = url
+    # expose public alias for convenience
+    engine = _engine
     return _engine
 
 
@@ -43,6 +50,9 @@ async def _ensure_engine() -> AsyncEngine:
     try:
         async with engine.connect() as conn:
             await conn.execute(text('SELECT 1'))
+        # keep public alias pointing to underlying engine
+        global engine as _public_engine
+        _public_engine = _engine
         return engine
     except Exception:
         if _ENGINE_URL != DEFAULT_SQLITE_URL:
@@ -64,3 +74,15 @@ async def create_schema() -> None:
     engine = await _ensure_engine()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+
+async def dispose_engine() -> None:
+    """Dispose the async engine if created and clear references."""
+    global _engine, engine
+    if _engine is not None:
+        try:
+            await _engine.dispose()
+        except Exception:
+            pass
+    _engine = None
+    engine = None
