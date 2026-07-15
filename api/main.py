@@ -5,11 +5,16 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse
 
 from etl.pipeline import ensure_dataset, get_dashboard_summary, predict_sales, train_model
+from .routes import router as api_router
+from . import db
 
 app = FastAPI(title="Retail Intelligence Platform", version="1.0.0")
 app.mount("/static", StaticFiles(directory="dashboard"), name="static")
 
 templates = Jinja2Templates(directory="dashboard")
+
+# Include modular API routes
+app.include_router(api_router, prefix="/api")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -23,16 +28,13 @@ async def health() -> dict:
     return {"status": "ok", "message": "Retail pipeline is running"}
 
 
-@app.get("/api/summary")
-async def summary() -> dict:
-    return get_dashboard_summary()
+@app.on_event("startup")
+async def startup_event():
+    # Eagerly ensure dataset exists (keeps backward compatibility)
+    ensure_dataset()
 
 
-@app.post("/api/predict")
-async def predict(payload: dict) -> dict:
-    return predict_sales(payload)
-
-
-@app.post("/api/train")
-async def train() -> dict:
-    return train_model(df=ensure_dataset())
+@app.on_event("shutdown")
+async def shutdown_event():
+    # Close DB engine on shutdown
+    await db.engine.dispose()
