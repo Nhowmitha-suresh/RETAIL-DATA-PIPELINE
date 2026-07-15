@@ -16,9 +16,15 @@
       .card { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:18px; padding:16px; }
       .metric { font-size:1.6rem; font-weight:700; margin-top:8px; }
       .muted { color:var(--muted); font-size:.95rem; }
+      .chart-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:20px; }
+      .chart-card { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:20px; padding:18px; min-height:320px; }
+      .chart-card.full-width { grid-column:1/-1; }
+      .chart-card h4 { margin:0 0 16px; font-size:1.1rem; }
+      .summary-note { margin-top:12px; color:var(--muted); font-size:.95rem; }
       form { margin-top:20px; display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); }
       input, select, button { width:100%; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:#0b1422; color:var(--text); }
-      button { background:linear-gradient(135deg,var(--accent),#2f7dff); border:none; cursor:pointer; font-weight:700; }
+      button { background:linear-gradient(135deg,var(--accent),#2f7dff); border:none; cursor:pointer; font-weight:700; transition:transform .2s ease; }
+      button:hover { transform:translateY(-1px); }
       .result { margin-top:16px; padding:16px; border-radius:16px; background:rgba(49,208,170,.15); border:1px solid rgba(49,208,170,.25); }
       .footer { margin-top:20px; text-align:center; color:var(--muted); font-size:.9rem; }
     </style>
@@ -30,11 +36,34 @@
         <p>Monitor demand, tune promotions, and forecast sales with a polished intelligent workflow.</p>
         <div class="grid">
           <div class="card"><div class="muted">Rows in dataset</div><div class="metric">{{ summary.total_rows }}</div></div>
-          <div class="card"><div class="muted">Total sales</div><div class="metric">${{ summary.total_sales }}</div></div>
-          <div class="card"><div class="muted">Avg. sales</div><div class="metric">${{ summary.average_sales }}</div></div>
+          <div class="card"><div class="muted">Total sales</div><div class="metric">₹{{ summary.total_sales }}</div></div>
+          <div class="card"><div class="muted">Avg. sales</div><div class="metric">₹{{ summary.average_sales }}</div></div>
+          <div class="card"><div class="muted">Average customers</div><div class="metric">{{ summary.average_customer_count }}</div></div>
           <div class="card"><div class="muted">Top region</div><div class="metric">{{ summary.top_region }}</div></div>
+          <div class="card"><div class="muted">Top category</div><div class="metric">{{ summary.top_category }}</div></div>
+          <div class="card"><div class="muted">Top store</div><div class="metric">{{ summary.top_store }}</div></div>
+          <div class="card"><div class="muted">Promotion boost</div><div class="metric">₹{{ summary.promotion_boost }}</div></div>
         </div>
       </section>
+
+      <section class="card" style="margin-top:20px;">
+          <h3>Sales Performance</h3>
+          <div class="chart-grid">
+            <div class="chart-card">
+              <h4>Sales by month</h4>
+              <canvas id="monthly-sales-chart" height="240"></canvas>
+            </div>
+            <div class="chart-card">
+              <h4>Revenue by region</h4>
+              <canvas id="region-sales-chart" height="240"></canvas>
+            </div>
+            <div class="chart-card full-width">
+              <h4>Revenue by category</h4>
+              <canvas id="category-sales-chart" height="260"></canvas>
+            </div>
+          </div>
+          <div class="summary-note">These insights help you spot seasonal demand, regional performance, and category momentum in rupees.</div>
+        </section>
 
       <section class="card" style="margin-top:20px;">
         <h3>Sales Forecasting</h3>
@@ -53,9 +82,78 @@
       </section>
       <div class="footer">Built with FastAPI, scikit-learn, pandas, and a responsive dashboard UI.</div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+      const currency = value => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(value);
       const form = document.getElementById('forecast-form');
       const result = document.getElementById('result');
+
+      const monthlySales = {{ summary.monthly_sales | tojson }};
+      const regionSales = {{ summary.region_sales | tojson }};
+      const categorySales = {{ summary.category_sales | tojson }};
+
+      const createChart = (ctx, type, labels, data, label, colors) => new Chart(ctx, {
+        type,
+        data: {
+          labels,
+          datasets: [{
+            label,
+            data,
+            backgroundColor: colors,
+            borderColor: 'rgba(255,255,255,0.85)',
+            borderWidth: 1,
+            tension: type === 'line' ? 0.4 : 0.2,
+            fill: type === 'line',
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#f5f7fa' } },
+            tooltip: {
+              callbacks: {
+                label: context => `${context.dataset.label}: ${currency(context.parsed.y ?? context.parsed)}`,
+              },
+            },
+          },
+          scales: {
+            x: { ticks: { color: '#f5f7fa' }, grid: { color: 'rgba(255,255,255,0.08)' } },
+            y: {
+              ticks: { color: '#f5f7fa', callback: value => `₹${value}` },
+              grid: { color: 'rgba(255,255,255,0.08)' },
+            },
+          },
+        },
+      });
+
+      createChart(
+        document.getElementById('monthly-sales-chart').getContext('2d'),
+        'line',
+        monthlySales.map(item => `M${item.month}`),
+        monthlySales.map(item => item.sales),
+        'Monthly sales',
+        'rgba(49,208,170,0.45)'
+      );
+
+      createChart(
+        document.getElementById('region-sales-chart').getContext('2d'),
+        'bar',
+        regionSales.map(item => item.region),
+        regionSales.map(item => item.sales),
+        'Revenue by region',
+        ['#31d0aa', '#2f7dff', '#ff7d65', '#f8c33f']
+      );
+
+      createChart(
+        document.getElementById('category-sales-chart').getContext('2d'),
+        'bar',
+        categorySales.map(item => item.category),
+        categorySales.map(item => item.sales),
+        'Revenue by category',
+        ['#3d8bff', '#7a43ff', '#37d875', '#ffb659']
+      );
+
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const data = Object.fromEntries(new FormData(form).entries());
@@ -66,7 +164,7 @@
         const response = await fetch('/api/predict', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         const json = await response.json();
         result.hidden = false;
-        result.innerHTML = `<strong>Predicted sales:</strong> $${json.predicted_sales} <br><strong>Confidence:</strong> ${json.confidence}`;
+        result.innerHTML = `<strong>Predicted sales:</strong> ${currency(json.predicted_sales)} <br><strong>Confidence:</strong> ${json.confidence}`;
       });
     </script>
   </body>

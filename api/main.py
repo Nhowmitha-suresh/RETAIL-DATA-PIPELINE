@@ -15,7 +15,7 @@ templates = Jinja2Templates(directory="dashboard")
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request) -> HTMLResponse:
     summary = get_dashboard_summary()
-    return templates.TemplateResponse("index.html", {"request": request, "summary": summary})
+    return templates.TemplateResponse(request, "index.html", {"summary": summary})
 
 
 @app.get("/api/health")

@@ -38,11 +38,29 @@ def ensure_dataset(path: Path | str | None = None) -> pd.DataFrame:
             "discount": rng.integers(0, 25, size=rows),
             "customer_count": rng.integers(40, 180, size=rows),
             "season": rng.choice(["Spring", "Summer", "Fall", "Winter"], size=rows),
-            "sales": np.maximum(100, rng.normal(800, 220, size=rows).round(2)),
         }
     )
-    df["sales"] = np.clip(df["sales"] * (1 + (df["promotion"] * 0.15)) + (df["discount"] * 1.8), 120, None)
-    df["sales"] = df["sales"].round(2)
+
+    category_multiplier = {"Electronics": 1.25, "Home": 1.05, "Fashion": 1.12, "Groceries": 0.95}
+    region_multiplier = {"North": 1.08, "South": 1.02, "East": 1.0, "West": 1.12}
+    seasonal_multiplier = {"Spring": 1.02, "Summer": 1.08, "Fall": 1.05, "Winter": 0.98}
+    store_multiplier = {"Store A": 1.0, "Store B": 1.04, "Store C": 1.08}
+
+    base_sales = (
+        520
+        + (df["customer_count"] * 3.2)
+        + (df["discount"] * 2.4)
+        + (df["month"] * 18)
+        + df["promotion"].astype(int) * 140
+    )
+    base_sales = (
+        base_sales
+        * df["category"].map(category_multiplier)
+        * df["region"].map(region_multiplier)
+        * df["season"].map(seasonal_multiplier)
+        * df["store"].map(store_multiplier)
+    )
+    df["sales"] = np.clip(base_sales + rng.normal(0, 35, size=rows), 120, None).round(2)
     df.to_csv(target_path, index=False)
     return df
 
@@ -116,12 +134,33 @@ def predict_sales(payload: Dict[str, Any], model_path: Path | str | None = None)
 
 def get_dashboard_summary() -> Dict[str, Any]:
     df = ensure_dataset()
+    monthly_sales = (
+        df.groupby("month")["sales"].sum().reindex(range(1, 13), fill_value=0)
+        .reset_index()
+        .to_dict(orient="records")
+    )
+    region_sales = (
+        df.groupby("region")["sales"].sum().sort_values(ascending=False)
+        .reset_index()
+        .to_dict(orient="records")
+    )
+    category_sales = (
+        df.groupby("category")["sales"].sum().sort_values(ascending=False)
+        .reset_index()
+        .to_dict(orient="records")
+    )
+
     summary = {
         "total_rows": int(len(df)),
         "total_sales": round(float(df["sales"].sum()), 2),
         "average_sales": round(float(df["sales"].mean()), 2),
+        "average_customer_count": round(float(df["customer_count"].mean()), 2),
         "top_region": df.groupby("region")["sales"].sum().sort_values(ascending=False).idxmax(),
         "top_category": df.groupby("category")["sales"].sum().sort_values(ascending=False).idxmax(),
+        "top_store": df.groupby("store")["sales"].sum().sort_values(ascending=False).idxmax(),
         "promotion_boost": round(float(df.loc[df["promotion"], "sales"].mean() - df.loc[~df["promotion"], "sales"].mean()), 2),
+        "monthly_sales": monthly_sales,
+        "region_sales": region_sales,
+        "category_sales": category_sales,
     }
     return summary
