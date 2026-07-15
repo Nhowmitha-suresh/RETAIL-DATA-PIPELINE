@@ -465,6 +465,25 @@
         color: var(--muted);
         font-size: 0.9rem;
       }
+      .toast {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        padding: 14px 18px;
+        border-radius: 20px;
+        background: rgba(16, 42, 67, 0.92);
+        color: white;
+        box-shadow: 0 24px 70px rgba(16, 42, 67, 0.24);
+        font-size: 0.95rem;
+        transform: translateY(16px);
+        opacity: 0;
+        transition: transform 0.24s ease, opacity 0.24s ease;
+        z-index: 999;
+      }
+      .toast.show {
+        transform: translateY(0);
+        opacity: 1;
+      }
       .animated-count {
         display: inline-block;
       }
@@ -649,10 +668,7 @@
             <p class="panel-title" id="notifications-heading">Notifications</p>
           </div>
           <div class="compact-card" id="notificationList">
-            <div class="notification-item"><span class="status-dot"></span><div>Revenue crossed ₹10 Lakhs.</div></div>
-            <div class="notification-item"><span class="status-dot"></span><div>New customer registered.</div></div>
-            <div class="notification-item"><span class="status-dot"></span><div>Inventory low on Groceries.</div></div>
-            <div class="notification-item"><span class="status-dot"></span><div>Monthly target achieved.</div></div>
+            <div class="notification-item"><span class="status-dot"></span><div>Loading notifications...</div></div>
           </div>
         </section>
       </aside>
@@ -670,10 +686,12 @@
             <input type="search" placeholder="Search reports, customers, products..." aria-label="Search dashboard" />
           </div>
           <div class="topbar-actions">
+            <button class="icon-button focus-visible" type="button" id="refreshSummary" aria-label="Refresh summary">🔄</button>
+            <button class="icon-button focus-visible" type="button" id="trainModel" aria-label="Retrain model">🧪</button>
             <button class="icon-button focus-visible" type="button" aria-label="Notifications">🔔</button>
             <button class="icon-button focus-visible" type="button" id="darkModeToggle" aria-label="Toggle dark mode">🌓</button>
             <button class="icon-button focus-visible" type="button" aria-label="Export options">⬇️</button>
-            <button class="btn-primary focus-visible" type="button">AI Insights</button>
+            <button class="btn-primary focus-visible" type="button" id="aiInsightsButton">AI Insights</button>
             <button class="icon-button focus-visible" type="button" aria-label="Profile menu">👤</button>
           </div>
         </section>
@@ -891,6 +909,72 @@
               </div>
             </div>
             <div id="forecastList"></div>
+            <div class="section-header" style="padding-top: 18px;">
+              <div>
+                <p class="section-title">Sales prediction</p>
+                <p class="panel-subtitle">Run a quick demand forecast from the enterprise engine.</p>
+              </div>
+            </div>
+            <div class="compact-card">
+              <form id="forecast-form">
+                <label>
+                  <span class="feature-label">Store</span>
+                  <select name="store" aria-label="Select store">
+                    <option value="Store A">Store A</option>
+                    <option value="Store B">Store B</option>
+                    <option value="Store C">Store C</option>
+                  </select>
+                </label>
+                <label>
+                  <span class="feature-label">Region</span>
+                  <select name="region" aria-label="Select region">
+                    <option value="North">North</option>
+                    <option value="South">South</option>
+                    <option value="East">East</option>
+                    <option value="West">West</option>
+                  </select>
+                </label>
+                <label>
+                  <span class="feature-label">Category</span>
+                  <select name="category" aria-label="Select category">
+                    <option value="Electronics">Electronics</option>
+                    <option value="Home">Home</option>
+                    <option value="Fashion">Fashion</option>
+                    <option value="Groceries">Groceries</option>
+                  </select>
+                </label>
+                <label>
+                  <span class="feature-label">Month</span>
+                  <input name="month" type="number" min="1" max="12" value="6" aria-label="Select month" />
+                </label>
+                <label>
+                  <span class="feature-label">Promotion</span>
+                  <select name="promotion" aria-label="Promotion enabled">
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                  </select>
+                </label>
+                <label>
+                  <span class="feature-label">Discount (%)</span>
+                  <input name="discount" type="number" min="0" max="25" value="10" aria-label="Discount percentage" />
+                </label>
+                <label>
+                  <span class="feature-label">Customers</span>
+                  <input name="customer_count" type="number" min="20" max="300" value="80" aria-label="Customer count" />
+                </label>
+                <label>
+                  <span class="feature-label">Season</span>
+                  <select name="season" aria-label="Season">
+                    <option value="Spring">Spring</option>
+                    <option value="Summer">Summer</option>
+                    <option value="Fall">Fall</option>
+                    <option value="Winter">Winter</option>
+                  </select>
+                </label>
+                <button class="btn-primary" type="submit">Predict sales</button>
+              </form>
+              <div id="result" hidden style="margin-top: 18px; padding: 16px; border-radius: 18px; background: rgba(83, 109, 255, 0.08); color: var(--text);"></div>
+            </div>
           </aside>
         </section>
 
@@ -942,7 +1026,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-      const summary = {{ summary | tojson }};
+      let summary = {{ summary | tojson }};
+      let revenueTrendChart, profitTrendChart, expenseDonutChart, customerGrowthChart;
       const formatCurrency = value => {
         const abs = Math.abs(value);
         if (abs >= 1_00_00_000) return `₹${(value / 1_00_00_000).toFixed(1)} Cr`;
@@ -1078,6 +1163,99 @@
         });
       };
 
+      const updateNotifications = () => {
+        const list = document.getElementById('notificationList');
+        if (!list) return;
+        list.innerHTML = summary.notifications.map((notification, index) => `
+          <div class="notification-item">
+            <span class="status-dot" style="background:${index % 3 === 0 ? '#22c55e' : index % 3 === 1 ? '#f59e0b' : '#536dff'}"></span>
+            <div>${notification}</div>
+          </div>
+        `).join('');
+      };
+
+      const setStatusMessage = (text, duration = 2200) => {
+        const toast = document.getElementById('toastMessage');
+        if (!toast) return;
+        toast.textContent = text;
+        toast.hidden = false;
+        toast.classList.add('show');
+        if (toast._timeout) clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => {
+          toast.classList.remove('show');
+          toast.hidden = true;
+        }, duration);
+      };
+
+      const updateCharts = () => {
+        if (!revenueTrendChart || !profitTrendChart || !expenseDonutChart || !customerGrowthChart) return;
+        const revenueLabels = summary.monthly_sales.map(item => `M${item.month}`);
+        const revenueData = summary.monthly_sales.map(item => item.sales);
+        revenueTrendChart.data.labels = revenueLabels;
+        revenueTrendChart.data.datasets[0].data = revenueData;
+        revenueTrendChart.update();
+        profitTrendChart.data.labels = revenueLabels;
+        profitTrendChart.data.datasets[0].data = revenueData.map(value => value * 0.31);
+        profitTrendChart.update();
+        expenseDonutChart.data.labels = summary.expense_breakdown.map(item => item.label);
+        expenseDonutChart.data.datasets[0].data = summary.expense_breakdown.map(item => item.value);
+        expenseDonutChart.update();
+        customerGrowthChart.data.datasets[0].data = [summary.new_users, summary.returning_users, summary.active_users];
+        customerGrowthChart.update();
+      };
+
+      const updateSummaryUI = data => {
+        summary = data;
+        liveCounters.revenue = summary.total_sales;
+        liveCounters.profit = summary.profit;
+        liveCounters.expenses = summary.expenses;
+        liveCounters.customers = summary.total_customers;
+        liveCounters.orders = summary.total_orders;
+        liveCounters.growth = summary.growth_pct;
+        liveCounters.conversion = summary.conversion_rate;
+        liveCounters.aov = summary.average_order_value;
+        liveCounters.satisfaction = summary.satisfaction_score;
+        liveCounters.activeUsers = summary.active_users;
+        liveCounters.newUsers = summary.new_users;
+        liveCounters.bounce = summary.bounce_rate;
+        liveCounters.mrr = summary.monthly_recurring_revenue;
+        liveCounters.cashFlow = summary.cash_flow;
+        updateHeadlineCards();
+        animateCounters();
+        buildInsightCards();
+        buildForecastList();
+        buildTable();
+        updateNotifications();
+        updateCharts();
+      };
+
+      const refreshSummary = async () => {
+        setStatusMessage('Refreshing dashboard summary...');
+        try {
+          const response = await fetch('/api/summary');
+          if (!response.ok) throw new Error('Refresh failed');
+          const data = await response.json();
+          updateSummaryUI(data);
+          setStatusMessage('Dashboard refreshed');
+        } catch (error) {
+          console.error(error);
+          setStatusMessage('Unable to refresh summary', 3200);
+        }
+      };
+
+      const trainModel = async () => {
+        setStatusMessage('Retraining model...');
+        try {
+          const response = await fetch('/api/train', { method: 'POST' });
+          if (!response.ok) throw new Error('Training failed');
+          const result = await response.json();
+          setStatusMessage(`Model updated (R² ${result.r2_score.toFixed(2)})`, 3600);
+        } catch (error) {
+          console.error(error);
+          setStatusMessage('Model retraining failed', 3200);
+        }
+      };
+
       const createChartInstance = (id, type, labels, data, label, color, options = {}) => {
         const ctx = document.getElementById(id).getContext('2d');
         return new Chart(ctx, {
@@ -1135,10 +1313,10 @@
       const renderCharts = () => {
         const revenueLabels = summary.monthly_sales.map(item => `M${item.month}`);
         const revenueData = summary.monthly_sales.map(item => item.sales);
-        createChartInstance('revenueTrendChart', 'line', revenueLabels, revenueData, 'Revenue', 'rgba(83, 109, 255, 0.8)');
-        createChartInstance('profitTrendChart', 'line', revenueLabels, revenueData.map(value => value * 0.31), 'Profit', 'rgba(34, 197, 94, 0.85)');
-        createPieChart('expenseDonutChart', summary.expense_breakdown.map(item => item.label), summary.expense_breakdown.map(item => item.value), ['#536dff', '#3b82f6', '#22c55e', '#f59e0b', '#ef4444']);
-        createChartInstance('customerGrowthChart', 'bar', ['New', 'Returning', 'Active'], [summary.new_users, summary.returning_users, summary.active_users], 'Customers', ['rgba(83, 109, 255, 0.88)', 'rgba(34, 197, 94, 0.8)', 'rgba(245, 158, 11, 0.8)']);
+        revenueTrendChart = createChartInstance('revenueTrendChart', 'line', revenueLabels, revenueData, 'Revenue', 'rgba(83, 109, 255, 0.8)');
+        profitTrendChart = createChartInstance('profitTrendChart', 'line', revenueLabels, revenueData.map(value => value * 0.31), 'Profit', 'rgba(34, 197, 94, 0.85)');
+        expenseDonutChart = createPieChart('expenseDonutChart', summary.expense_breakdown.map(item => item.label), summary.expense_breakdown.map(item => item.value), ['#536dff', '#3b82f6', '#22c55e', '#f59e0b', '#ef4444']);
+        customerGrowthChart = createChartInstance('customerGrowthChart', 'bar', ['New', 'Returning', 'Active'], [summary.new_users, summary.returning_users, summary.active_users], 'Customers', ['rgba(83, 109, 255, 0.88)', 'rgba(34, 197, 94, 0.8)', 'rgba(245, 158, 11, 0.8)']);
       };
 
       const simulateLiveUpdates = () => {
@@ -1195,6 +1373,11 @@
       document.getElementById('printDashboard').addEventListener('click', () => window.print());
       document.getElementById('downloadRevenue').addEventListener('click', () => document.getElementById('revenueTrendChart').toBlob(blob => { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'revenue-trend.png'; a.click(); }));
       document.getElementById('downloadProfit').addEventListener('click', () => document.getElementById('profitTrendChart').toBlob(blob => { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'profit-trend.png'; a.click(); }));
+      document.getElementById('refreshSummary').addEventListener('click', refreshSummary);
+      document.getElementById('trainModel').addEventListener('click', trainModel);
+      document.getElementById('aiInsightsButton').addEventListener('click', () => {
+        document.getElementById('insights-heading')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
 
       document.getElementById('resetFilters').addEventListener('click', () => {
         document.getElementById('dateRange').value = 'Last 7 Days';
@@ -1210,6 +1393,7 @@
         renderCharts();
         buildInsightCards();
         buildForecastList();
+        updateNotifications();
         buildTable();
         simulateLiveUpdates();
       };
@@ -1217,23 +1401,27 @@
       window.addEventListener('DOMContentLoaded', init);
 
       const form = document.getElementById('forecast-form');
-      form.addEventListener('submit', async event => {
-        event.preventDefault();
-        const data = Object.fromEntries(new FormData(form).entries());
-        data.promotion = data.promotion === 'true';
-        data.month = Number(data.month);
-        data.discount = Number(data.discount);
-        data.customer_count = Number(data.customer_count);
-        const response = await fetch('/api/predict', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
+      if (form) {
+        form.addEventListener('submit', async event => {
+          event.preventDefault();
+          const data = Object.fromEntries(new FormData(form).entries());
+          data.promotion = data.promotion === 'true';
+          data.month = Number(data.month);
+          data.discount = Number(data.discount);
+          data.customer_count = Number(data.customer_count);
+          const response = await fetch('/api/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          const json = await response.json();
+          const resultPanel = document.getElementById('result');
+          if (resultPanel) {
+            resultPanel.hidden = false;
+            resultPanel.innerHTML = `<strong>Predicted sales:</strong> ${formatCurrency(json.predicted_sales)} <br><strong>Confidence:</strong> ${json.confidence}`;
+          }
         });
-        const json = await response.json();
-        const resultPanel = document.getElementById('result');
-        resultPanel.hidden = false;
-        resultPanel.innerHTML = `<strong>Predicted sales:</strong> ${formatCurrency(json.predicted_sales)} <br><strong>Confidence:</strong> ${json.confidence}`;
-      });
+      }
     </script>
   </body>
 </html>
