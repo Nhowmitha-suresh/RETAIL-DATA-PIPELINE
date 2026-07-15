@@ -12,12 +12,17 @@ SECRET_KEY = os.environ.get('SECRET_KEY') or 'change-me-please'
 ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+pwd_context = CryptContext(schemes=['sha256_crypt'], deprecated='auto')
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/api/token')
 
 # Dummy in-memory user store for demo
 _fake_users = {
-    'admin': {'username': 'admin', 'full_name': 'Administrator', 'hashed_password': pwd_context.hash('adminpass'), 'role': 'admin'}
+    'admin': {
+        'username': 'admin',
+        'full_name': 'Administrator',
+        'hashed_password': pwd_context.hash('adminpass'),
+        'role': 'admin',
+    }
 }
 
 
@@ -51,6 +56,14 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     if user is None:
         raise credentials_exception
     return user
+
+
+def require_role(role: str):
+    def _checker(user = Depends(get_current_user)):
+        if user.get('role') != role and user.get('role') != 'admin':
+            raise HTTPException(status_code=403, detail='Insufficient privileges')
+        return user
+    return _checker
 
 
 def login(form_data: OAuth2PasswordRequestForm):

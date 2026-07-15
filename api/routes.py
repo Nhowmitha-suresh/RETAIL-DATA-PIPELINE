@@ -9,6 +9,11 @@ from etl.pipeline import get_dashboard_summary, predict_sales, train_model
 from .auth import login, get_current_user
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordRequestForm
+from .utils import pagination_params, filter_params
+from .repositories import create_customer, get_customer, update_customer, delete_customer, list_customers
+from .auth import require_role
+from typing import Dict, Any
+from .repositories import create_product, get_product, update_product, delete_product, list_products, create_order, get_order, update_order, delete_order, list_orders
 
 router = APIRouter()
 
@@ -33,10 +38,7 @@ async def products():
     summary = get_dashboard_summary()
     return {"status": "ok", "products": summary.get('product_performance')}
 
-@router.get('/customers')
-async def customers():
-    summary = get_dashboard_summary()
-    return {"status": "ok", "customers": {"total_customers": summary.get('total_customers'), "new_users": summary.get('new_users')}}
+
 
 @router.get('/inventory')
 async def inventory():
@@ -70,6 +72,117 @@ async def reports():
 @router.get('/settings')
 async def settings():
     return {"status": "ok", "settings": {"theme": "dark", "currency": "INR"}}
+
+
+# Customers CRUD
+@router.post('/customers', dependencies=[Depends(require_role('manager'))])
+async def customers_create(payload: Dict[str, Any], db: AsyncSession = Depends(get_db)):
+    created = await create_customer(db, payload)
+    return {"status": "ok", "created": created}
+
+
+@router.get('/customers')
+async def customers_list(p: dict = Depends(pagination_params), f: dict = Depends(filter_params), db: AsyncSession = Depends(get_db)):
+    results = await list_customers(db, limit=p['limit'], offset=p['offset'], q=f['search'], sort=f['sort'])
+    return {"status": "ok", "items": results}
+
+
+@router.get('/customers/{customer_id}')
+async def customers_get(customer_id: str, db: AsyncSession = Depends(get_db)):
+    obj = await get_customer(db, customer_id)
+    if not obj:
+        raise HTTPException(status_code=404, detail='Customer not found')
+    return {"status": "ok", "customer": obj}
+
+
+@router.put('/customers/{customer_id}', dependencies=[Depends(require_role('manager'))])
+async def customers_update(customer_id: str, payload: Dict[str, Any], db: AsyncSession = Depends(get_db)):
+    ok = await update_customer(db, customer_id, payload)
+    if not ok:
+        raise HTTPException(status_code=404, detail='Customer not found')
+    return {"status": "ok"}
+
+
+@router.delete('/customers/{customer_id}', dependencies=[Depends(require_role('manager'))])
+async def customers_delete(customer_id: str, db: AsyncSession = Depends(get_db)):
+    ok = await delete_customer(db, customer_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail='Customer not found')
+    return {"status": "ok"}
+
+
+### Products CRUD
+@router.post('/products', dependencies=[Depends(require_role('manager'))])
+async def products_create(payload: Dict[str, Any], db: AsyncSession = Depends(get_db)):
+    created = await create_product(db, payload)
+    return {"status": "ok", "created": created}
+
+
+@router.get('/products')
+async def products_list(p: dict = Depends(pagination_params), f: dict = Depends(filter_params), db: AsyncSession = Depends(get_db)):
+    results = await list_products(db, limit=p['limit'], offset=p['offset'], q=f['search'], sort=f['sort'])
+    return {"status": "ok", "items": results}
+
+
+@router.get('/products/{product_id}')
+async def products_get(product_id: str, db: AsyncSession = Depends(get_db)):
+    obj = await get_product(db, product_id)
+    if not obj:
+        raise HTTPException(status_code=404, detail='Product not found')
+    return {"status": "ok", "product": obj}
+
+
+@router.put('/products/{product_id}', dependencies=[Depends(require_role('manager'))])
+async def products_update(product_id: str, payload: Dict[str, Any], db: AsyncSession = Depends(get_db)):
+    ok = await update_product(db, product_id, payload)
+    if not ok:
+        raise HTTPException(status_code=404, detail='Product not found')
+    return {"status": "ok"}
+
+
+@router.delete('/products/{product_id}', dependencies=[Depends(require_role('manager'))])
+async def products_delete(product_id: str, db: AsyncSession = Depends(get_db)):
+    ok = await delete_product(db, product_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail='Product not found')
+    return {"status": "ok"}
+
+
+### Orders CRUD
+@router.post('/orders', dependencies=[Depends(require_role('manager'))])
+async def orders_create(payload: Dict[str, Any], db: AsyncSession = Depends(get_db)):
+    created = await create_order(db, payload)
+    return {"status": "ok", "created": created}
+
+
+@router.get('/orders')
+async def orders_list(p: dict = Depends(pagination_params), f: dict = Depends(filter_params), db: AsyncSession = Depends(get_db)):
+    results = await list_orders(db, limit=p['limit'], offset=p['offset'], q=f['search'], sort=f['sort'])
+    return {"status": "ok", "items": results}
+
+
+@router.get('/orders/{order_id}')
+async def orders_get(order_id: str, db: AsyncSession = Depends(get_db)):
+    obj = await get_order(db, order_id)
+    if not obj:
+        raise HTTPException(status_code=404, detail='Order not found')
+    return {"status": "ok", "order": obj}
+
+
+@router.put('/orders/{order_id}', dependencies=[Depends(require_role('manager'))])
+async def orders_update(order_id: str, payload: Dict[str, Any], db: AsyncSession = Depends(get_db)):
+    ok = await update_order(db, order_id, payload)
+    if not ok:
+        raise HTTPException(status_code=404, detail='Order not found')
+    return {"status": "ok"}
+
+
+@router.delete('/orders/{order_id}', dependencies=[Depends(require_role('manager'))])
+async def orders_delete(order_id: str, db: AsyncSession = Depends(get_db)):
+    ok = await delete_order(db, order_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail='Order not found')
+    return {"status": "ok"}
 
 @router.post('/predict')
 async def predict(payload: dict):
