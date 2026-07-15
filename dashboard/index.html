@@ -3,1425 +3,165 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Retail Intelligence Dashboard</title>
+    <title>Retail Intelligence Enterprise</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <style>
-      :root {
-        color-scheme: light;
-        --bg: #f5f7fb;
-        --surface: rgba(255, 255, 255, 0.88);
-        --surface-strong: rgba(255, 255, 255, 0.98);
-        --border: rgba(31, 42, 59, 0.08);
-        --text: #102a43;
-        --muted: #607d8b;
-        --accent: #536dff;
-        --accent-soft: rgba(83, 109, 255, 0.16);
-        --success: #22c55e;
-        --warning: #f59e0b;
-        --danger: #ef4444;
-        --shadow: 0 24px 80px rgba(16, 42, 67, 0.08);
-        --radius: 24px;
-      }
-      * {
-        box-sizing: border-box;
-      }
-      html {
-        scroll-behavior: smooth;
-      }
-      body {
-        margin: 0;
-        min-height: 100vh;
-        font-family: 'Inter', sans-serif;
-        background: radial-gradient(circle at top left, rgba(83, 109, 255, 0.14), transparent 32%),
-          radial-gradient(circle at bottom right, rgba(16, 42, 67, 0.08), transparent 28%),
-          var(--bg);
-        color: var(--text);
-      }
-      img {
-        max-width: 100%;
-        display: block;
-      }
-      button,
-      input,
-      select {
-        font: inherit;
-      }
-      .layout {
-        display: grid;
-        grid-template-columns: 280px 1fr;
-        min-height: 100vh;
-        gap: 24px;
-        padding: 24px;
-      }
-      .sidebar {
-        position: sticky;
-        top: 24px;
-        align-self: start;
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
-      }
-      .panel {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
-        backdrop-filter: blur(18px);
-        overflow: hidden;
-      }
-      .panel-header,
-      .section-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 20px 24px;
-      }
-      .panel-title,
-      .section-title {
-        margin: 0;
-        font-size: 1rem;
-        font-weight: 700;
-        letter-spacing: -0.03em;
-      }
-      .panel-subtitle {
-        color: var(--muted);
-        font-size: 0.92rem;
-        margin-top: 4px;
-      }
-      .sidebar-nav,
-      .tag-list,
-      .stats-grid,
-      .kpi-grid,
-      .trend-grid,
-      .footer-actions {
-        display: grid;
-        gap: 14px;
-      }
-      .sidebar-nav a,
-      .sidebar-item {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        padding: 14px 18px;
-        border-radius: 18px;
-        color: var(--text);
-        text-decoration: none;
-        transition: background 0.22s ease, transform 0.22s ease;
-      }
-      .sidebar-nav a:hover,
-      .sidebar-item:hover {
-        background: rgba(83, 109, 255, 0.09);
-        transform: translateY(-1px);
-      }
-      .sidebar-item.active,
-      .sidebar-nav a.active {
-        background: linear-gradient(135deg, rgba(83, 109, 255, 0.18), rgba(83, 109, 255, 0.08));
-        font-weight: 700;
-      }
-      .sidebar-item span {
-        display: inline-flex;
-        width: 38px;
-        height: 38px;
-        align-items: center;
-        justify-content: center;
-        border-radius: 14px;
-        background: rgba(83, 109, 255, 0.08);
-        color: var(--accent);
-      }
-      .main {
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
-      }
-      .topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 20px 28px;
-        background: var(--surface-strong);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
-        backdrop-filter: blur(20px);
-      }
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-      }
-      .brand-dot {
-        width: 42px;
-        height: 42px;
-        border-radius: 14px;
-        background: linear-gradient(135deg, #536dff, #4f9bf9);
-        display: grid;
-        place-items: center;
-        color: white;
-        font-weight: 800;
-      }
-      .brand-label {
-        display: grid;
-        gap: 2px;
-      }
-      .brand-label strong {
-        display: block;
-        font-size: 1rem;
-      }
-      .topbar-actions {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-      }
-      .search-input {
-        position: relative;
-        flex: 1;
-      }
-      .search-input input {
-        width: 100%;
-        padding: 14px 18px 14px 44px;
-        border-radius: 16px;
-        border: 1px solid var(--border);
-        background: white;
-        color: var(--text);
-        outline: none;
-      }
-      .search-input::before {
-        content: '🔍';
-        position: absolute;
-        left: 16px;
-        top: 50%;
-        transform: translateY(-50%);
-        pointer-events: none;
-      }
-      .icon-button,
-      .chip {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 16px;
-        border: 1px solid var(--border);
-        background: var(--surface);
-        color: var(--text);
-        cursor: pointer;
-        padding: 10px 14px;
-        transition: transform .22s ease, box-shadow .22s ease;
-      }
-      .icon-button:hover,
-      .chip:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 18px 40px rgba(83, 109, 255, 0.12);
-      }
-      .kpi-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .kpi-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 24px;
-        box-shadow: var(--shadow);
-        position: relative;
-        overflow: hidden;
-      }
-      .kpi-card::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(circle at top right, rgba(83, 109, 255, 0.14), transparent 30%);
-        opacity: 0.8;
-        pointer-events: none;
-      }
-      .kpi-card-content {
-        position: relative;
-      }
-      .kpi-meta {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-      }
-      .kpi-label {
-        font-size: 0.92rem;
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-      }
-      .kpi-value {
-        margin: 12px 0 8px;
-        font-size: 2rem;
-        line-height: 1;
-        font-weight: 800;
-      }
-      .kpi-trend {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.95rem;
-        color: var(--success);
-      }
-      .kpi-trend .arrow {
-        display: inline-flex;
-        width: 24px;
-        height: 24px;
-        align-items: center;
-        justify-content: center;
-        border-radius: 12px;
-        background: rgba(34, 197, 94, 0.12);
-      }
-      .sparkline {
-        width: 100%;
-        height: 68px;
-      }
-      .trend-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 12px;
-        border-radius: 999px;
-        font-size: 0.88rem;
-        background: rgba(83, 109, 255, 0.08);
-        color: var(--accent);
-      }
-      .main-grid {
-        display: grid;
-        gap: 24px;
-      }
-      .analytics-grid {
-        grid-template-columns: 1.5fr 1fr;
-      }
-      .chart-grid {
-        display: grid;
-        gap: 24px;
-      }
-      .chart-panel {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 24px;
-        box-shadow: var(--shadow);
-      }
-      .chart-panel canvas {
-        width: 100% !important;
-        height: 320px !important;
-      }
-      .table-panel {
-        overflow: hidden;
-      }
-      .table-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 18px;
-      }
-      .table-actions .input-group {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
-      .table-actions input,
-      .table-actions select {
-        width: 220px;
-        border-radius: 16px;
-        border: 1px solid var(--border);
-        padding: 12px 14px;
-      }
-      .data-table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 800px;
-      }
-      .data-table th,
-      .data-table td {
-        text-align: left;
-        padding: 16px 18px;
-      }
-      .data-table thead {
-        background: rgba(83, 109, 255, 0.04);
-      }
-      .data-table th {
-        font-size: 0.9rem;
-        color: var(--muted);
-        font-weight: 600;
-      }
-      .data-table tbody tr {
-        transition: background 0.2s ease;
-      }
-      .data-table tbody tr:hover {
-        background: rgba(83, 109, 255, 0.08);
-      }
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 10px;
-        border-radius: 999px;
-        font-size: 0.82rem;
-        font-weight: 600;
-      }
-      .badge.success { background: rgba(34, 197, 94, 0.14); color: #166534; }
-      .badge.alert { background: rgba(248, 113, 113, 0.12); color: #b91c1c; }
-      .badge.neutral { background: rgba(59, 130, 246, 0.12); color: #1d4ed8; }
-      .compact-card {
-        display: grid;
-        gap: 16px;
-        padding: 20px 24px;
-        border-radius: var(--radius);
-        border: 1px solid var(--border);
-        background: var(--surface);
-        box-shadow: var(--shadow);
-      }
-      .compact-card h3 {
-        margin: 0;
-        font-size: 1rem;
-      }
-      .insight-item,
-      .notification-item,
-      .product-item,
-      .forecast-item {
-        display: flex;
-        justify-content: space-between;
-        padding: 14px 0;
-        border-bottom: 1px solid rgba(16, 42, 67, 0.06);
-      }
-      .insight-item:last-child,
-      .notification-item:last-child,
-      .product-item:last-child,
-      .forecast-item:last-child {
-        border-bottom: none;
-      }
-      .status-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 999px;
-        background: var(--accent);
-      }
-      .legend-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 10px;
-        border-radius: 999px;
-        font-size: 0.8rem;
-        color: var(--muted);
-        background: rgba(16, 42, 67, 0.05);
-      }
-      .hero-panel {
-        display: grid;
-        gap: 22px;
-      }
-      .hero-headline {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 20px;
-      }
-      .hero-headline h1 {
-        margin: 0;
-        font-size: clamp(2rem, 2.2vw, 2.8rem);
-      }
-      .badge-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 16px;
-        border-radius: 999px;
-        background: rgba(83, 109, 255, 0.1);
-        color: var(--accent);
-        font-weight: 700;
-      }
-      .hero-chart {
-        width: 100%;
-        min-height: 260px;
-      }
-      .features-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 16px;
-      }
-      .feature-card {
-        background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.88));
-        border: 1px solid rgba(16, 42, 67, 0.06);
-        border-radius: 20px;
-        padding: 18px 20px;
-        box-shadow: 0 18px 30px rgba(16, 42, 67, 0.06);
-      }
-      .feature-label {
-        font-size: 0.82rem;
-        color: var(--muted);
-        margin-bottom: 10px;
-      }
-      .feature-value {
-        font-size: 1.4rem;
-        font-weight: 700;
-      }
-      .footer {
-        padding: 18px 24px;
-        color: var(--muted);
-        font-size: 0.9rem;
-      }
-      .toast {
-        position: fixed;
-        right: 24px;
-        bottom: 24px;
-        padding: 14px 18px;
-        border-radius: 20px;
-        background: rgba(16, 42, 67, 0.92);
-        color: white;
-        box-shadow: 0 24px 70px rgba(16, 42, 67, 0.24);
-        font-size: 0.95rem;
-        transform: translateY(16px);
-        opacity: 0;
-        transition: transform 0.24s ease, opacity 0.24s ease;
-        z-index: 999;
-      }
-      .toast.show {
-        transform: translateY(0);
-        opacity: 1;
-      }
-      .animated-count {
-        display: inline-block;
-      }
-      .btn-primary {
-        color: white;
-        background: linear-gradient(135deg, #536dff, #5b8bff);
-        border: none;
-        padding: 12px 18px;
-        border-radius: 16px;
-        cursor: pointer;
-        transition: transform .2s ease, box-shadow .2s ease;
-      }
-      .btn-primary:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 18px 35px rgba(83, 109, 255, 0.18);
-      }
-      .btn-secondary {
-        color: var(--text);
-        background: rgba(16, 42, 67, 0.06);
-        border: 1px solid var(--border);
-      }
-      .stat-pill {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 999px;
-        padding: 8px 12px;
-        background: rgba(83, 109, 255, 0.08);
-        color: var(--accent);
-        font-weight: 700;
-      }
-      .table-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        margin-top: 18px;
-      }
-      .pagination {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .pagination button {
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 10px 14px;
-        background: white;
-        cursor: pointer;
-      }
-      .table-scroll {
-        overflow-x: auto;
-      }
-      .loading-skeleton {
-        min-height: 92px;
-        border-radius: 20px;
-        background: linear-gradient(90deg, rgba(255,255,255,0.9), rgba(245,247,251,0.6), rgba(255,255,255,0.9));
-        background-size: 200% 100%;
-        animation: shimmer 1.8s infinite;
-      }
-      @keyframes shimmer {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
-      }
-      .focus-visible:focus-visible {
-        outline: 3px solid rgba(83, 109, 255, 0.35);
-        outline-offset: 2px;
-      }
-      @media (max-width: 1220px) {
-        .layout {
-          grid-template-columns: 1fr;
-        }
-        .sidebar {
-          position: static;
-          top: auto;
-        }
-      }
-      @media (max-width: 980px) {
-        .hero-headline,
-        .table-actions,
-        .analytics-grid {
-          flex-direction: column;
-          align-items: stretch;
-        }
-        .features-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-        .kpi-grid {
-          grid-template-columns: repeat(1, minmax(0, 1fr));
-        }
-      }
-      @media (max-width: 720px) {
-        .chart-panel canvas {
-          height: 260px !important;
-        }
-        .features-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div class="layout">
-      <aside class="sidebar" aria-label="Main navigation">
-        <section class="panel">
-          <div class="panel-header">
-            <div>
-              <p class="panel-title">Insights</p>
-              <p class="panel-subtitle">Global analytics hub</p>
-            </div>
-            <div class="badge-pill">Live</div>
+    <div class="dashboard-shell">
+      <aside class="sidebar" aria-label="Primary navigation">
+        <div class="brand">
+          <div class="brand-dot">RI</div>
+          <div>
+            <p class="brand-name">Retail Intelligence</p>
+            <p class="brand-subtitle">Enterprise Analytics</p>
           </div>
-          <nav class="sidebar-nav" aria-label="Sidebar menu">
-            <a class="sidebar-item active" href="#"><span>🏠</span>Dashboard</a>
-            <a class="sidebar-item" href="#sales"><span>💰</span>Sales</a>
-            <a class="sidebar-item" href="#revenue"><span>📈</span>Revenue</a>
-            <a class="sidebar-item" href="#customers"><span>👥</span>Customers</a>
-            <a class="sidebar-item" href="#products"><span>🛍️</span>Products</a>
-            <a class="sidebar-item" href="#inventory"><span>📦</span>Inventory</a>
-            <a class="sidebar-item" href="#finance"><span>💳</span>Finance</a>
-            <a class="sidebar-item" href="#reports"><span>🗂️</span>Reports</a>
-            <a class="sidebar-item" href="#forecast"><span>🔮</span>Forecast</a>
-            <a class="sidebar-item" href="#ai-insights"><span>🧠</span>AI Insights</a>
-            <a class="sidebar-item" href="#settings"><span>⚙️</span>Settings</a>
-          </nav>
-        </section>
+        </div>
 
-        <section class="panel" aria-labelledby="filter-heading">
-          <div class="panel-header">
-            <div>
-              <p class="panel-title" id="filter-heading">Filters</p>
-              <p class="panel-subtitle">Refine the report</p>
-            </div>
-          </div>
-          <div class="compact-card">
-            <label>
-              <span class="feature-label">Date range</span>
-              <select id="dateRange" aria-label="Select date range">
-                <option>Last 7 Days</option>
-                <option>Last 30 Days</option>
-                <option>This Month</option>
-                <option>Last Month</option>
-                <option>This Year</option>
-                <option>Custom Range</option>
-              </select>
-            </label>
-            <label>
-              <span class="feature-label">Category</span>
-              <select id="filterCategory" aria-label="Filter by category">
-                <option>All Categories</option>
-                <option>Electronics</option>
-                <option>Home</option>
-                <option>Fashion</option>
-                <option>Groceries</option>
-              </select>
-            </label>
-            <label>
-              <span class="feature-label">Region</span>
-              <select id="filterRegion" aria-label="Filter by region">
-                <option>All Regions</option>
-                <option>North</option>
-                <option>South</option>
-                <option>East</option>
-                <option>West</option>
-              </select>
-            </label>
-            <label>
-              <span class="feature-label">Branch</span>
-              <select id="filterBranch" aria-label="Filter by branch">
-                <option>All Branches</option>
-                <option>Store A</option>
-                <option>Store B</option>
-                <option>Store C</option>
-              </select>
-            </label>
-            <button class="btn-primary" id="resetFilters">Reset Filters</button>
-          </div>
-        </section>
-
-        <section class="panel" aria-labelledby="notifications-heading">
-          <div class="panel-header">
-            <p class="panel-title" id="notifications-heading">Notifications</p>
-          </div>
-          <div class="compact-card" id="notificationList">
-            <div class="notification-item"><span class="status-dot"></span><div>Loading notifications...</div></div>
-          </div>
-        </section>
+        <nav class="sidebar-nav" aria-label="Dashboard navigation">
+          <a href="#dashboard" class="sidebar-item" data-page="dashboard"><span>🏠</span>Dashboard</a>
+          <a href="#sales" class="sidebar-item" data-page="sales"><span>💰</span>Sales</a>
+          <a href="#revenue" class="sidebar-item" data-page="revenue"><span>📈</span>Revenue</a>
+          <a href="#customers" class="sidebar-item" data-page="customers"><span>👥</span>Customers</a>
+          <a href="#products" class="sidebar-item" data-page="products"><span>🛍️</span>Products</a>
+          <a href="#inventory" class="sidebar-item" data-page="inventory"><span>📦</span>Inventory</a>
+          <a href="#finance" class="sidebar-item" data-page="finance"><span>💳</span>Finance</a>
+          <a href="#marketing" class="sidebar-item" data-page="marketing"><span>📣</span>Marketing</a>
+          <a href="#forecasting" class="sidebar-item" data-page="forecasting"><span>🔮</span>Forecasting</a>
+          <a href="#ai-insights" class="sidebar-item" data-page="ai-insights"><span>🧠</span>AI Insights</a>
+          <a href="#reports" class="sidebar-item" data-page="reports"><span>🗂️</span>Reports</a>
+          <a href="#settings" class="sidebar-item" data-page="settings"><span>⚙️</span>Settings</a>
+        </nav>
       </aside>
 
-      <main class="main" aria-label="Dashboard content">
-        <section class="topbar" aria-label="Top navigation">
-          <div class="brand">
-            <div class="brand-dot">R</div>
-            <div class="brand-label">
-              <strong>RetailIQ</strong>
-              <span class="panel-subtitle">Premium analytics suite</span>
-            </div>
+      <main class="main-content">
+        <section class="page-header">
+          <div>
+            <p class="section-label">Enterprise Platform</p>
+            <h1 id="pageTitle">Executive Overview</h1>
+            <p class="section-description">Real-time retail analytics, AI insights, forecasting and reports.</p>
           </div>
-          <div class="search-input">
-            <input type="search" placeholder="Search reports, customers, products..." aria-label="Search dashboard" />
-          </div>
-          <div class="topbar-actions">
-            <button class="icon-button focus-visible" type="button" id="refreshSummary" aria-label="Refresh summary">🔄</button>
-            <button class="icon-button focus-visible" type="button" id="trainModel" aria-label="Retrain model">🧪</button>
-            <button class="icon-button focus-visible" type="button" aria-label="Notifications">🔔</button>
-            <button class="icon-button focus-visible" type="button" id="darkModeToggle" aria-label="Toggle dark mode">🌓</button>
-            <button class="icon-button focus-visible" type="button" aria-label="Export options">⬇️</button>
-            <button class="btn-primary focus-visible" type="button" id="aiInsightsButton">AI Insights</button>
-            <button class="icon-button focus-visible" type="button" aria-label="Profile menu">👤</button>
+          <div class="header-actions">
+            <button class="action-button" id="refreshSummary">Refresh</button>
+            <button class="action-button" id="runForecast">Forecast</button>
+            <button class="action-button" id="commandPalette">Ctrl+K</button>
           </div>
         </section>
 
-        <section class="panel hero-panel" aria-labelledby="dashboard-heading">
-          <div class="hero-headline">
-            <div>
-              <p class="section-title" id="dashboard-heading">Enterprise Retail Dashboard</p>
-              <p class="panel-subtitle">Premium overview with actionable revenue, customer, and forecast KPIs.</p>
-            </div>
-            <div class="badge-pill">Updated 2m ago</div>
+        <section class="page-section" data-page="dashboard">
+          <div class="filter-row">
+            <label><span>Date Range</span><select id="filterDateRange"><option>Last 7 Days</option><option>Last 30 Days</option><option>This Month</option><option>This Quarter</option><option>This Year</option></select></label>
+            <label><span>Category</span><select id="filterCategory"><option>All Categories</option><option>Electronics</option><option>Home</option><option>Fashion</option><option>Groceries</option></select></label>
+            <label><span>Region</span><select id="filterRegion"><option>All Regions</option><option>North</option><option>South</option><option>East</option><option>West</option><option>Central</option></select></label>
+            <label><span>Channel</span><select id="filterChannel"><option>All Channels</option><option>Online</option><option>In-Store</option><option>Mobile App</option></select></label>
           </div>
 
-          <div class="features-grid">
-            <div class="feature-card">
-              <div class="feature-label">Revenue</div>
-              <div class="feature-value" id="revenueValue">₹0</div>
-              <div class="legend-pill">+18% vs last month</div>
-            </div>
-            <div class="feature-card">
-              <div class="feature-label">Profit</div>
-              <div class="feature-value" id="profitValue">₹0</div>
-              <div class="legend-pill">Healthy margin</div>
-            </div>
-            <div class="feature-card">
-              <div class="feature-label">Expenses</div>
-              <div class="feature-value" id="expenseValue">₹0</div>
-              <div class="legend-pill">Optimized</div>
-            </div>
+          <div class="kpi-grid" id="kpiGrid"></div>
+
+          <div class="chart-grid">
+            <section class="chart-panel"><h2>Revenue Trend</h2><canvas id="chartRevenueTrend"></canvas></section>
+            <section class="chart-panel"><h2>Profit Trend</h2><canvas id="chartProfitTrend"></canvas></section>
+            <section class="chart-panel"><h2>Order Mix</h2><canvas id="chartOrderMix"></canvas></section>
+            <section class="chart-panel"><h2>Customer Segmentation</h2><canvas id="chartCustomerSegment"></canvas></section>
+          </div>
+
+          <section class="insight-panel"><h2>AI Recommendations</h2><div id="aiInsights"></div></section>
+        </section>
+
+        <section class="page-section" data-page="sales" hidden>
+          <div class="filter-row">
+            <label><span>Date Range</span><select><option>Last 7 Days</option><option>Last 30 Days</option><option>This Month</option><option>This Year</option></select></label>
+            <label><span>Store</span><select><option>All Stores</option><option>Store A</option><option>Store B</option></select></label>
+            <label><span>State</span><select><option>All States</option><option>North State</option><option>South State</option></select></label>
+            <label><span>Payment</span><select><option>All Methods</option><option>Credit Card</option><option>UPI</option></select></label>
+          </div>
+          <div class="chart-grid">
+            <section class="chart-panel"><h2>Sales Trend</h2><canvas id="chartSalesTrend"></canvas></section>
+            <section class="chart-panel"><h2>Top Products</h2><canvas id="chartTopProducts"></canvas></section>
+          </div>
+          <section class="table-panel"><h2>Sales Table</h2><div class="table-actions"><button class="filter-button" id="exportSalesCsv">Export CSV</button></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Transaction</th><th>Customer</th><th>Product</th><th>Revenue</th><th>Status</th></tr></thead><tbody id="salesTableBody"></tbody></table></div></section>
+        </section>
+
+        <section class="page-section" data-page="revenue" hidden>
+          <div class="filter-row">
+            <label><span>Year</span><select><option>2024</option><option>2023</option></select></label>
+            <label><span>Quarter</span><select><option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option></select></label>
+            <label><span>Category</span><select><option>All Categories</option><option>Electronics</option></select></label>
+            <label><span>Region</span><select><option>All Regions</option><option>North</option></select></label>
+          </div>
+          <div class="kpi-grid" id="revenueKpiGrid"></div>
+          <div class="chart-grid">
+            <section class="chart-panel"><h2>Revenue Forecast</h2><canvas id="chartRevenueForecast"></canvas></section>
+            <section class="chart-panel"><h2>Profit Waterfall</h2><canvas id="chartRevenueWaterfall"></canvas></section>
           </div>
         </section>
 
-        <section class="panel" aria-labelledby="kpi-heading">
-          <div class="section-header">
-            <div>
-              <p class="section-title" id="kpi-heading">Key performance indicators</p>
-              <p class="panel-subtitle">Enterprise KPIs with live trends and monthly comparisons.</p>
-            </div>
-            <div class="trend-badge">Live updates every 8s</div>
+        <section class="page-section" data-page="customers" hidden>
+          <div class="filter-row">
+            <label><span>Customer Type</span><select><option>All Types</option><option>Retail</option><option>Wholesale</option></select></label>
+            <label><span>Gender</span><select><option>All</option><option>Male</option><option>Female</option></select></label>
+            <label><span>Age Group</span><select><option>All Ages</option><option>25-34</option></select></label>
+            <label><span>Membership</span><select><option>All</option><option>Gold</option><option>Platinum</option></select></label>
           </div>
-          <div class="kpi-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr));">
-            <div class="kpi-card">
-              <div class="kpi-card-content">
-                <div class="kpi-meta"><span class="kpi-label">Revenue</span><span>💵</span></div>
-                <div class="kpi-value" data-counter="revenue">₹0</div>
-                <div class="kpi-trend"><span class="arrow">▲</span> +18% <span>vs last month</span></div>
-                <canvas class="sparkline" id="sparkRevenue"></canvas>
-              </div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-card-content">
-                <div class="kpi-meta"><span class="kpi-label">Profit</span><span>📈</span></div>
-                <div class="kpi-value" data-counter="profit">₹0</div>
-                <div class="kpi-trend" style="color: var(--success);"><span class="arrow">▲</span> +15% <span>margin gain</span></div>
-                <canvas class="sparkline" id="sparkProfit"></canvas>
-              </div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-card-content">
-                <div class="kpi-meta"><span class="kpi-label">Expenses</span><span>📉</span></div>
-                <div class="kpi-value" data-counter="expenses">₹0</div>
-                <div class="kpi-trend" style="color: var(--danger);">▼ -6% <span>controlled</span></div>
-                <canvas class="sparkline" id="sparkExpenses"></canvas>
-              </div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-card-content">
-                <div class="kpi-meta"><span class="kpi-label">Customers</span><span>👥</span></div>
-                <div class="kpi-value" data-counter="customers">0</div>
-                <div class="kpi-trend"><span class="arrow">▲</span> +12% <span>new users</span></div>
-                <canvas class="sparkline" id="sparkCustomers"></canvas>
-              </div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-card-content">
-                <div class="kpi-meta"><span class="kpi-label">Orders</span><span>🛒</span></div>
-                <div class="kpi-value" data-counter="orders">0</div>
-                <div class="kpi-trend"><span class="arrow">▲</span> +10% <span>conversion lift</span></div>
-                <canvas class="sparkline" id="sparkOrders"></canvas>
-              </div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-card-content">
-                <div class="kpi-meta"><span class="kpi-label">Growth</span><span>📊</span></div>
-                <div class="kpi-value" data-counter="growth">0%</div>
-                <div class="kpi-trend"><span class="arrow">▲</span> +{{ summary.growth_pct }}%</div>
-                <canvas class="sparkline" id="sparkGrowth"></canvas>
-              </div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-card-content">
-                <div class="kpi-meta"><span class="kpi-label">Conversion</span><span>⚡</span></div>
-                <div class="kpi-value" data-counter="conversion">0%</div>
-                <div class="kpi-trend"><span class="arrow">▲</span> +{{ summary.conversion_rate }}%</div>
-                <canvas class="sparkline" id="sparkConversion"></canvas>
-              </div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-card-content">
-                <div class="kpi-meta"><span class="kpi-label">AOV</span><span>🧾</span></div>
-                <div class="kpi-value" data-counter="aov">₹0</div>
-                <div class="kpi-trend"><span class="arrow">▲</span> +7%</div>
-                <canvas class="sparkline" id="sparkAOV"></canvas>
-              </div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-card-content">
-                <div class="kpi-meta"><span class="kpi-label">Satisfaction</span><span>⭐</span></div>
-                <div class="kpi-value" data-counter="satisfaction">0%</div>
-                <div class="kpi-trend"><span class="arrow">▲</span> +5%</div>
-                <canvas class="sparkline" id="sparkSatisfaction"></canvas>
-              </div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-card-content">
-                <div class="kpi-meta"><span class="kpi-label">Active Users</span><span>🌐</span></div>
-                <div class="kpi-value" data-counter="activeUsers">0</div>
-                <div class="kpi-trend"><span class="arrow">▲</span> +13%</div>
-                <canvas class="sparkline" id="sparkActive"></canvas>
-              </div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-card-content">
-                <div class="kpi-meta"><span class="kpi-label">New Users</span><span>🆕</span></div>
-                <div class="kpi-value" data-counter="newUsers">0</div>
-                <div class="kpi-trend"><span class="arrow">▲</span> +9%</div>
-                <canvas class="sparkline" id="sparkNewUsers"></canvas>
-              </div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-card-content">
-                <div class="kpi-meta"><span class="kpi-label">Bounce Rate</span><span>↩️</span></div>
-                <div class="kpi-value" data-counter="bounce">0%</div>
-                <div class="kpi-trend" style="color: var(--danger);">▼ -4%</div>
-                <canvas class="sparkline" id="sparkBounce"></canvas>
-              </div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-card-content">
-                <div class="kpi-meta"><span class="kpi-label">MRR</span><span>💎</span></div>
-                <div class="kpi-value" data-counter="mrr">₹0</div>
-                <div class="kpi-trend"><span class="arrow">▲</span> +11%</div>
-                <canvas class="sparkline" id="sparkMRR"></canvas>
-              </div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-card-content">
-                <div class="kpi-meta"><span class="kpi-label">Cash Flow</span><span>💼</span></div>
-                <div class="kpi-value" data-counter="cashFlow">₹0</div>
-                <div class="kpi-trend"><span class="arrow">▲</span> +14%</div>
-                <canvas class="sparkline" id="sparkCash"></canvas>
-              </div>
-            </div>
+          <div class="chart-grid">
+            <section class="chart-panel"><h2>Customer Growth</h2><canvas id="chartCustomerGrowth"></canvas></section>
+            <section class="chart-panel"><h2>Lifetime Value</h2><canvas id="chartCustomerLtv"></canvas></section>
           </div>
         </section>
 
-        <section class="main-grid" style="grid-template-columns: 1.4fr 0.6fr;">
-          <div class="analytics-grid">
-            <div class="chart-panel" aria-labelledby="revenue-trend-heading">
-              <div class="section-header">
-                <div>
-                  <p class="section-title" id="revenue-trend-heading">Revenue Trend</p>
-                  <p class="panel-subtitle">Revenue movement over the last year with forecast.</p>
-                </div>
-                <button class="btn-secondary" type="button" id="downloadRevenue">Download PNG</button>
-              </div>
-              <canvas id="revenueTrendChart" class="hero-chart"></canvas>
-            </div>
-
-            <div class="chart-panel" aria-labelledby="profit-trend-heading">
-              <div class="section-header">
-                <div>
-                  <p class="section-title" id="profit-trend-heading">Profit Trend</p>
-                  <p class="panel-subtitle">Profit performance with cost optimization insights.</p>
-                </div>
-                <button class="btn-secondary" type="button" id="downloadProfit">Download PNG</button>
-              </div>
-              <canvas id="profitTrendChart" class="hero-chart"></canvas>
-            </div>
-
-            <div class="chart-grid" style="grid-template-columns: 1fr 1fr;">
-              <div class="chart-panel" aria-labelledby="expense-breakdown-heading">
-                <div class="section-header">
-                  <div>
-                    <p class="section-title" id="expense-breakdown-heading">Expense Breakdown</p>
-                    <p class="panel-subtitle">How costs are distributed across operations.</p>
-                  </div>
-                </div>
-                <canvas id="expenseDonutChart" class="hero-chart"></canvas>
-              </div>
-              <div class="chart-panel" aria-labelledby="customer-growth-heading">
-                <div class="section-header">
-                  <div>
-                    <p class="section-title" id="customer-growth-heading">Customer Growth</p>
-                    <p class="panel-subtitle">New, returning, and active users over time.</p>
-                  </div>
-                </div>
-                <canvas id="customerGrowthChart" class="hero-chart"></canvas>
-              </div>
-            </div>
+        <section class="page-section" data-page="products" hidden>
+          <div class="chart-grid">
+            <section class="chart-panel"><h2>Category Performance</h2><canvas id="chartCategoryPerformance"></canvas></section>
+            <section class="chart-panel"><h2>Brand Performance</h2><canvas id="chartBrandPerformance"></canvas></section>
           </div>
-
-          <aside class="compact-card" aria-labelledby="insights-heading">
-            <div class="section-header">
-              <div>
-                <p class="section-title" id="insights-heading">AI Insights</p>
-                <p class="panel-subtitle">Automated recommendations and revenue signals.</p>
-              </div>
-            </div>
-            <div id="insightCards"></div>
-            <div class="section-header" style="padding-top: 16px;">
-              <div>
-                <p class="section-title">Live activity</p>
-                <p class="panel-subtitle">Latest product, forecast, and event highlights.</p>
-              </div>
-            </div>
-            <div id="forecastList"></div>
-            <div class="section-header" style="padding-top: 18px;">
-              <div>
-                <p class="section-title">Sales prediction</p>
-                <p class="panel-subtitle">Run a quick demand forecast from the enterprise engine.</p>
-              </div>
-            </div>
-            <div class="compact-card">
-              <form id="forecast-form">
-                <label>
-                  <span class="feature-label">Store</span>
-                  <select name="store" aria-label="Select store">
-                    <option value="Store A">Store A</option>
-                    <option value="Store B">Store B</option>
-                    <option value="Store C">Store C</option>
-                  </select>
-                </label>
-                <label>
-                  <span class="feature-label">Region</span>
-                  <select name="region" aria-label="Select region">
-                    <option value="North">North</option>
-                    <option value="South">South</option>
-                    <option value="East">East</option>
-                    <option value="West">West</option>
-                  </select>
-                </label>
-                <label>
-                  <span class="feature-label">Category</span>
-                  <select name="category" aria-label="Select category">
-                    <option value="Electronics">Electronics</option>
-                    <option value="Home">Home</option>
-                    <option value="Fashion">Fashion</option>
-                    <option value="Groceries">Groceries</option>
-                  </select>
-                </label>
-                <label>
-                  <span class="feature-label">Month</span>
-                  <input name="month" type="number" min="1" max="12" value="6" aria-label="Select month" />
-                </label>
-                <label>
-                  <span class="feature-label">Promotion</span>
-                  <select name="promotion" aria-label="Promotion enabled">
-                    <option value="true">Yes</option>
-                    <option value="false">No</option>
-                  </select>
-                </label>
-                <label>
-                  <span class="feature-label">Discount (%)</span>
-                  <input name="discount" type="number" min="0" max="25" value="10" aria-label="Discount percentage" />
-                </label>
-                <label>
-                  <span class="feature-label">Customers</span>
-                  <input name="customer_count" type="number" min="20" max="300" value="80" aria-label="Customer count" />
-                </label>
-                <label>
-                  <span class="feature-label">Season</span>
-                  <select name="season" aria-label="Season">
-                    <option value="Spring">Spring</option>
-                    <option value="Summer">Summer</option>
-                    <option value="Fall">Fall</option>
-                    <option value="Winter">Winter</option>
-                  </select>
-                </label>
-                <button class="btn-primary" type="submit">Predict sales</button>
-              </form>
-              <div id="result" hidden style="margin-top: 18px; padding: 16px; border-radius: 18px; background: rgba(83, 109, 255, 0.08); color: var(--text);"></div>
-            </div>
-          </aside>
         </section>
 
-        <section class="chart-panel table-panel" aria-labelledby="sales-table-heading">
-          <div class="section-header">
-            <div>
-              <p class="section-title" id="sales-table-heading">Sales performance table</p>
-              <p class="panel-subtitle">Sortable and exportable dataset for enterprise reporting.</p>
-            </div>
-            <div class="table-actions">
-              <div class="input-group">
-                <input id="tableSearch" type="search" placeholder="Search customers" aria-label="Search table" />
-                <select id="tableFilter">
-                  <option value="all">All regions</option>
-                  <option value="North">North</option>
-                  <option value="South">South</option>
-                  <option value="East">East</option>
-                  <option value="West">West</option>
-                </select>
-              </div>
-              <div>
-                <button class="btn-secondary" type="button" id="downloadCsv">Export CSV</button>
-                <button class="btn-secondary" type="button" id="printDashboard">Print</button>
-              </div>
-            </div>
-            <div class="table-scroll">
-              <table class="data-table" aria-label="Sales performance table">
-                <thead>
-                  <tr>
-                    <th>Order</th>
-                    <th>Customer</th>
-                    <th>Region</th>
-                    <th>Category</th>
-                    <th>Sales</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-              </table>
-            </div>
-            <div class="table-footer">
-              <div id="tableSummary"></div>
-              <div class="pagination" id="tablePagination"></div>
-            </div>
+        <section class="page-section" data-page="inventory" hidden>
+          <div class="chart-grid">
+            <section class="chart-panel"><h2>Inventory Value</h2><canvas id="chartInventoryValue"></canvas></section>
+            <section class="chart-panel"><h2>Stock Turnover</h2><canvas id="chartStockTurnover"></canvas></section>
           </div>
+        </section>
+
+        <section class="page-section" data-page="finance" hidden>
+          <div class="chart-grid">
+            <section class="chart-panel"><h2>Cash Flow</h2><canvas id="chartCashFlow"></canvas></section>
+            <section class="chart-panel"><h2>Margin Analysis</h2><canvas id="chartMarginAnalysis"></canvas></section>
+          </div>
+        </section>
+
+        <section class="page-section" data-page="marketing" hidden>
+          <div class="chart-grid">
+            <section class="chart-panel"><h2>Campaign ROI</h2><canvas id="chartCampaignRoi"></canvas></section>
+            <section class="chart-panel"><h2>Promotion Performance</h2><canvas id="chartPromotionPerformance"></canvas></section>
+          </div>
+        </section>
+
+        <section class="page-section" data-page="forecasting" hidden>
+          <div class="chart-grid">
+            <section class="chart-panel"><h2>Demand Forecast</h2><canvas id="chartDemandForecast"></canvas></section>
+            <section class="chart-panel"><h2>Inventory Forecast</h2><canvas id="chartInventoryForecast"></canvas></section>
+          </div>
+        </section>
+
+        <section class="page-section" data-page="ai-insights" hidden>
+          <div class="insight-panel"><h2>AI Insights</h2><div id="aiInsightsPage"></div></div>
+        </section>
+
+        <section class="page-section" data-page="reports" hidden>
+          <div class="chart-panel"><h2>Executive Report</h2><p>Generate downloadable PDF, Excel and PowerPoint analytics summaries.</p></div>
+        </section>
+
+        <section class="page-section" data-page="settings" hidden>
+          <div class="chart-panel"><h2>Settings</h2><p>Theme, currency, language and notifications.</p></div>
         </section>
       </main>
     </div>
 
+    <div id="toastMessage" class="toast"></div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-      let summary = {{ summary | tojson }};
-      let revenueTrendChart, profitTrendChart, expenseDonutChart, customerGrowthChart;
-      const formatCurrency = value => {
-        const abs = Math.abs(value);
-        if (abs >= 1_00_00_000) return `₹${(value / 1_00_00_000).toFixed(1)} Cr`;
-        if (abs >= 1_00_000) return `₹${(value / 1_00_000).toFixed(1)} L`; 
-        if (abs >= 1000) return `₹${(value / 1000).toLocaleString('en-IN')} `;
-        return `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
-      };
-      const formatNumber = value => value.toLocaleString('en-IN');
-
-      const liveCounters = {
-        revenue: summary.total_sales,
-        profit: summary.profit,
-        expenses: summary.expenses,
-        customers: summary.total_customers,
-        orders: summary.total_orders,
-        growth: summary.growth_pct,
-        conversion: summary.conversion_rate,
-        aov: summary.average_order_value,
-        satisfaction: summary.satisfaction_score,
-        activeUsers: summary.active_users,
-        newUsers: summary.new_users,
-        bounce: summary.bounce_rate,
-        mrr: summary.monthly_recurring_revenue,
-        cashFlow: summary.cash_flow,
-      };
-
-      const updateHeadlineCards = () => {
-        document.getElementById('revenueValue').textContent = formatCurrency(summary.total_sales);
-        document.getElementById('profitValue').textContent = formatCurrency(summary.profit);
-        document.getElementById('expenseValue').textContent = formatCurrency(summary.expenses);
-      };
-
-      const animateValue = (el, start, end, formatter, duration = 1200) => {
-        const range = end - start;
-        const startTime = performance.now();
-        const update = time => {
-          const progress = Math.min((time - startTime) / duration, 1);
-          const current = start + range * progress;
-          el.textContent = formatter(current);
-          if (progress < 1) requestAnimationFrame(update);
-        };
-        requestAnimationFrame(update);
-      };
-
-      const animateCounters = () => {
-        document.querySelectorAll('[data-counter]').forEach(el => {
-          const key = el.dataset.counter;
-          const value = liveCounters[key];
-          const formatter = key === 'growth' || key === 'conversion' || key === 'satisfaction' || key === 'bounce'
-            ? v => `${v.toFixed(1)}%`
-            : v => formatCurrency(Math.round(v));
-          animateValue(el, 0, value, formatter);
-        });
-      };
-
-      const sparklineConfig = (labels, data, color) => ({
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{ data, borderColor: color, backgroundColor: 'rgba(83, 109, 255, 0.18)', pointRadius: 0, fill: true, tension: 0.4 }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: { x: { display: false }, y: { display: false } },
-        }
-      });
-
-      const renderSparklines = () => {
-        const months = summary.monthly_sales.map(item => `M${item.month}`);
-        const values = summary.monthly_sales.map(item => item.sales);
-        [
-          ['sparkRevenue', values, '#536dff'],
-          ['sparkProfit', values.map(v => v * 0.32), '#22c55e'],
-          ['sparkExpenses', values.map(v => v * 0.28), '#ef4444'],
-          ['sparkCustomers', values.map(v => (v / 1000) * 5), '#4f9bf9'],
-          ['sparkOrders', values.map(v => (v / 1000) * 4.2), '#f59e0b'],
-          ['sparkGrowth', values.map((_, idx) => summary.growth_pct + idx * 0.2), '#3b82f6'],
-          ['sparkConversion', values.map(() => summary.conversion_rate), '#7c3aed'],
-          ['sparkAOV', values.map(v => summary.average_order_value / 1000), '#0f766e'],
-          ['sparkSatisfaction', values.map(() => summary.satisfaction_score), '#16a34a'],
-          ['sparkActive', values.map(v => summary.active_users / 10), '#0284c7'],
-          ['sparkNewUsers', values.map(v => summary.new_users / 10), '#ec4899'],
-          ['sparkBounce', values.map(() => summary.bounce_rate), '#ef4444'],
-          ['sparkMRR', values.map(() => summary.monthly_recurring_revenue / 1000), '#0ea5e9'],
-          ['sparkCash', values.map(() => summary.cash_flow / 1000), '#f97316'],
-        ].forEach(([id, data, color]) => {
-          const ctx = document.getElementById(id).getContext('2d');
-          new Chart(ctx, sparklineConfig(months, data, color));
-        });
-      };
-
-      const themeToggle = document.getElementById('darkModeToggle');
-      themeToggle.addEventListener('click', () => {
-        document.body.classList.toggle('dark-mode');
-        if (document.body.classList.contains('dark-mode')) {
-          document.documentElement.style.setProperty('--bg', '#0a1120');
-          document.documentElement.style.setProperty('--surface', 'rgba(10, 17, 32, 0.92)');
-          document.documentElement.style.setProperty('--surface-strong', 'rgba(10, 17, 32, 0.98)');
-          document.documentElement.style.setProperty('--text', '#f8fafc');
-          document.documentElement.style.setProperty('--muted', '#cbd5e1');
-          document.documentElement.style.setProperty('--border', 'rgba(148, 163, 184, 0.16)');
-        } else {
-          document.documentElement.style.setProperty('--bg', '#f5f7fb');
-          document.documentElement.style.setProperty('--surface', 'rgba(255, 255, 255, 0.88)');
-          document.documentElement.style.setProperty('--surface-strong', 'rgba(255, 255, 255, 0.98)');
-          document.documentElement.style.setProperty('--text', '#102a43');
-          document.documentElement.style.setProperty('--muted', '#607d8b');
-          document.documentElement.style.setProperty('--border', 'rgba(31, 42, 59, 0.08)');
-        }
-      });
-
-      const buildInsightCards = () => {
-        const container = document.getElementById('insightCards');
-        container.innerHTML = '';
-        summary.ai_insights.forEach(insight => {
-          const card = document.createElement('div');
-          card.className = 'insight-item';
-          card.innerHTML = `<div><strong>${insight.title}</strong><p style="margin:6px 0 0;color:var(--muted);font-size:0.95rem;">${insight.text}</p></div><div class="status-dot"></div>`;
-          container.appendChild(card);
-        });
-      };
-
-      const buildForecastList = () => {
-        const list = document.getElementById('forecastList');
-        list.innerHTML = '';
-        summary.product_performance.forEach(product => {
-          const item = document.createElement('div');
-          item.className = 'forecast-item';
-          item.innerHTML = `<div><strong>${product.name}</strong><p style="margin:6px 0 0;color:var(--muted);font-size:0.92rem;">${product.trend} growth</p></div><div>${formatCurrency(product.sales)}</div>`;
-          list.appendChild(item);
-        });
-      };
-
-      const updateNotifications = () => {
-        const list = document.getElementById('notificationList');
-        if (!list) return;
-        list.innerHTML = summary.notifications.map((notification, index) => `
-          <div class="notification-item">
-            <span class="status-dot" style="background:${index % 3 === 0 ? '#22c55e' : index % 3 === 1 ? '#f59e0b' : '#536dff'}"></span>
-            <div>${notification}</div>
-          </div>
-        `).join('');
-      };
-
-      const setStatusMessage = (text, duration = 2200) => {
-        const toast = document.getElementById('toastMessage');
-        if (!toast) return;
-        toast.textContent = text;
-        toast.hidden = false;
-        toast.classList.add('show');
-        if (toast._timeout) clearTimeout(toast._timeout);
-        toast._timeout = setTimeout(() => {
-          toast.classList.remove('show');
-          toast.hidden = true;
-        }, duration);
-      };
-
-      const updateCharts = () => {
-        if (!revenueTrendChart || !profitTrendChart || !expenseDonutChart || !customerGrowthChart) return;
-        const revenueLabels = summary.monthly_sales.map(item => `M${item.month}`);
-        const revenueData = summary.monthly_sales.map(item => item.sales);
-        revenueTrendChart.data.labels = revenueLabels;
-        revenueTrendChart.data.datasets[0].data = revenueData;
-        revenueTrendChart.update();
-        profitTrendChart.data.labels = revenueLabels;
-        profitTrendChart.data.datasets[0].data = revenueData.map(value => value * 0.31);
-        profitTrendChart.update();
-        expenseDonutChart.data.labels = summary.expense_breakdown.map(item => item.label);
-        expenseDonutChart.data.datasets[0].data = summary.expense_breakdown.map(item => item.value);
-        expenseDonutChart.update();
-        customerGrowthChart.data.datasets[0].data = [summary.new_users, summary.returning_users, summary.active_users];
-        customerGrowthChart.update();
-      };
-
-      const updateSummaryUI = data => {
-        summary = data;
-        liveCounters.revenue = summary.total_sales;
-        liveCounters.profit = summary.profit;
-        liveCounters.expenses = summary.expenses;
-        liveCounters.customers = summary.total_customers;
-        liveCounters.orders = summary.total_orders;
-        liveCounters.growth = summary.growth_pct;
-        liveCounters.conversion = summary.conversion_rate;
-        liveCounters.aov = summary.average_order_value;
-        liveCounters.satisfaction = summary.satisfaction_score;
-        liveCounters.activeUsers = summary.active_users;
-        liveCounters.newUsers = summary.new_users;
-        liveCounters.bounce = summary.bounce_rate;
-        liveCounters.mrr = summary.monthly_recurring_revenue;
-        liveCounters.cashFlow = summary.cash_flow;
-        updateHeadlineCards();
-        animateCounters();
-        buildInsightCards();
-        buildForecastList();
-        buildTable();
-        updateNotifications();
-        updateCharts();
-      };
-
-      const refreshSummary = async () => {
-        setStatusMessage('Refreshing dashboard summary...');
-        try {
-          const response = await fetch('/api/summary');
-          if (!response.ok) throw new Error('Refresh failed');
-          const data = await response.json();
-          updateSummaryUI(data);
-          setStatusMessage('Dashboard refreshed');
-        } catch (error) {
-          console.error(error);
-          setStatusMessage('Unable to refresh summary', 3200);
-        }
-      };
-
-      const trainModel = async () => {
-        setStatusMessage('Retraining model...');
-        try {
-          const response = await fetch('/api/train', { method: 'POST' });
-          if (!response.ok) throw new Error('Training failed');
-          const result = await response.json();
-          setStatusMessage(`Model updated (R² ${result.r2_score.toFixed(2)})`, 3600);
-        } catch (error) {
-          console.error(error);
-          setStatusMessage('Model retraining failed', 3200);
-        }
-      };
-
-      const createChartInstance = (id, type, labels, data, label, color, options = {}) => {
-        const ctx = document.getElementById(id).getContext('2d');
-        return new Chart(ctx, {
-          type,
-          data: {
-            labels,
-            datasets: [{
-              label,
-              data,
-              backgroundColor: color,
-              borderColor: color,
-              borderWidth: 2,
-              borderRadius: 12,
-              fill: type === 'line' || type === 'radar',
-              tension: 0.35,
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animations: { tension: { duration: 1200, easing: 'easeOutQuart' } },
-            plugins: {
-              tooltip: {
-                callbacks: { label: ctx => `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y ?? ctx.parsed)}` }
-              },
-              legend: { display: false }
-            },
-            scales: {
-              x: { grid: { color: 'rgba(16,42,67,0.05)' }, ticks: { color: 'var(--muted)' } },
-              y: { grid: { color: 'rgba(16,42,67,0.05)' }, ticks: { color: 'var(--muted)', callback: value => `₹${value}` } }
-            },
-            ...options
-          }
-        });
-      };
-
-      const createPieChart = (id, labels, data, colors) => {
-        const ctx = document.getElementById(id).getContext('2d');
-        return new Chart(ctx, {
-          type: 'doughnut',
-          data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0 }] },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { position: 'bottom', labels: { color: 'var(--muted)' } },
-              tooltip: {
-                callbacks: { label: ctx => `${ctx.label}: ${formatCurrency(ctx.parsed)}` }
-              }
-            }
-          }
-        });
-      };
-
-      const renderCharts = () => {
-        const revenueLabels = summary.monthly_sales.map(item => `M${item.month}`);
-        const revenueData = summary.monthly_sales.map(item => item.sales);
-        revenueTrendChart = createChartInstance('revenueTrendChart', 'line', revenueLabels, revenueData, 'Revenue', 'rgba(83, 109, 255, 0.8)');
-        profitTrendChart = createChartInstance('profitTrendChart', 'line', revenueLabels, revenueData.map(value => value * 0.31), 'Profit', 'rgba(34, 197, 94, 0.85)');
-        expenseDonutChart = createPieChart('expenseDonutChart', summary.expense_breakdown.map(item => item.label), summary.expense_breakdown.map(item => item.value), ['#536dff', '#3b82f6', '#22c55e', '#f59e0b', '#ef4444']);
-        customerGrowthChart = createChartInstance('customerGrowthChart', 'bar', ['New', 'Returning', 'Active'], [summary.new_users, summary.returning_users, summary.active_users], 'Customers', ['rgba(83, 109, 255, 0.88)', 'rgba(34, 197, 94, 0.8)', 'rgba(245, 158, 11, 0.8)']);
-      };
-
-      const simulateLiveUpdates = () => {
-        const update = () => {
-          liveCounters.revenue += (Math.random() * 25000 - 9000);
-          liveCounters.profit += (Math.random() * 14000 - 4000);
-          liveCounters.expenses = Math.max(0, liveCounters.revenue - liveCounters.profit);
-          liveCounters.customers += Math.floor(Math.random() * 8 + 3);
-          liveCounters.orders += Math.floor(Math.random() * 6 + 2);
-          liveCounters.activeUsers += Math.floor(Math.random() * 15 + 6);
-          liveCounters.newUsers += Math.floor(Math.random() * 6 + 2);
-          liveCounters.bounce = Math.max(10, liveCounters.bounce + (Math.random() * 1.2 - 0.6));
-          liveCounters.conversion = Math.min(12, liveCounters.conversion + (Math.random() * 0.2 - 0.05));
-          animateCounters();
-          document.querySelector('.badge-pill').textContent = `Updated ${Math.floor(Math.random() * 5) + 1}m ago`;
-        };
-        setInterval(update, 8000);
-      };
-
-      const buildTable = () => {
-        const tableData = Array.from({ length: 12 }, (_, i) => ({
-          order: `#${1200 + i}`,
-          customer: `Customer ${String.fromCharCode(65 + i)}`,
-          region: ['North', 'South', 'East', 'West'][i % 4],
-          category: ['Electronics', 'Home', 'Fashion', 'Groceries'][i % 4],
-          sales: summary.monthly_sales[i % summary.monthly_sales.length].sales * (0.9 + Math.random() * 0.2),
-          status: ['Completed', 'Pending', 'Refunded'][i % 3]
-        }));
-        const body = document.getElementById('tableBody');
-        body.innerHTML = tableData.map(row => `
-          <tr>
-            <td>${row.order}</td>
-            <td>${row.customer}</td>
-            <td>${row.region}</td>
-            <td>${row.category}</td>
-            <td>${formatCurrency(Math.round(row.sales))}</td>
-            <td><span class="badge ${row.status === 'Completed' ? 'success' : row.status === 'Pending' ? 'neutral' : 'alert'}">${row.status}</span></td>
-          </tr>
-        `).join('');
-        document.getElementById('tableSummary').textContent = `${tableData.length} records displayed`;
-      };
-
-      document.getElementById('downloadCsv').addEventListener('click', () => {
-        const rows = [['Order', 'Customer', 'Region', 'Category', 'Sales', 'Status']];
-        document.querySelectorAll('.data-table tbody tr').forEach(tr => rows.push(Array.from(tr.children).map(td => td.textContent.trim())));
-        const csv = rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'sales_data.csv';
-        a.click();
-      });
-
-      document.getElementById('printDashboard').addEventListener('click', () => window.print());
-      document.getElementById('downloadRevenue').addEventListener('click', () => document.getElementById('revenueTrendChart').toBlob(blob => { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'revenue-trend.png'; a.click(); }));
-      document.getElementById('downloadProfit').addEventListener('click', () => document.getElementById('profitTrendChart').toBlob(blob => { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'profit-trend.png'; a.click(); }));
-      document.getElementById('refreshSummary').addEventListener('click', refreshSummary);
-      document.getElementById('trainModel').addEventListener('click', trainModel);
-      document.getElementById('aiInsightsButton').addEventListener('click', () => {
-        document.getElementById('insights-heading')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-
-      document.getElementById('resetFilters').addEventListener('click', () => {
-        document.getElementById('dateRange').value = 'Last 7 Days';
-        document.getElementById('filterCategory').value = 'All Categories';
-        document.getElementById('filterRegion').value = 'All Regions';
-        document.getElementById('filterBranch').value = 'All Branches';
-      });
-
-      const init = () => {
-        updateHeadlineCards();
-        animateCounters();
-        renderSparklines();
-        renderCharts();
-        buildInsightCards();
-        buildForecastList();
-        updateNotifications();
-        buildTable();
-        simulateLiveUpdates();
-      };
-
-      window.addEventListener('DOMContentLoaded', init);
-
-      const form = document.getElementById('forecast-form');
-      if (form) {
-        form.addEventListener('submit', async event => {
-          event.preventDefault();
-          const data = Object.fromEntries(new FormData(form).entries());
-          data.promotion = data.promotion === 'true';
-          data.month = Number(data.month);
-          data.discount = Number(data.discount);
-          data.customer_count = Number(data.customer_count);
-          const response = await fetch('/api/predict', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-          });
-          const json = await response.json();
-          const resultPanel = document.getElementById('result');
-          if (resultPanel) {
-            resultPanel.hidden = false;
-            resultPanel.innerHTML = `<strong>Predicted sales:</strong> ${formatCurrency(json.predicted_sales)} <br><strong>Confidence:</strong> ${json.confidence}`;
-          }
-        });
-      }
-    </script>
+    <script src="app.js"></script>
   </body>
 </html>
