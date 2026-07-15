@@ -33,7 +33,29 @@ app.include_router(ws_router)
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request) -> HTMLResponse:
-    summary = get_dashboard_summary()
+    summary = get_dashboard_summary() or {}
+    # ensure keys expected by the template exist to avoid Jinja serialization errors
+    defaults = {
+        "monthly_sales": [],
+        "monthly_profit": [],
+        "monthly_expenses": [],
+        "total_revenue": 0.0,
+        "total_profit": 0.0,
+        "total_expenses": 0.0,
+        "total_orders": 0,
+        "total_customers": 0,
+        "top_region": None,
+        "top_category": None,
+        "top_store": None,
+        "top_brand": None,
+        "top_channel": None,
+        "expense_breakdown": [],
+        "ai_insights": [],
+        "notifications": [],
+        "product_performance": [],
+    }
+    for k, v in defaults.items():
+        summary.setdefault(k, v)
     return templates.TemplateResponse(request, "index.html", {"summary": summary})
 
 
@@ -56,7 +78,15 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     # Close DB engine on shutdown
-    await db.engine.dispose()
+    try:
+        # prefer finalize helper if available
+        await db.dispose_engine()
+    except AttributeError:
+        # fallback if module doesn't expose helper
+        try:
+            await db.engine.dispose()
+        except Exception:
+            pass
 
 
 @app.exception_handler(Exception)

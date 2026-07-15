@@ -46,20 +46,20 @@ def get_sessionmaker(engine: AsyncEngine) -> sessionmaker:
 
 async def _ensure_engine() -> AsyncEngine:
     global _engine, _ENGINE_URL
-    engine = init_engine()
+    eng = init_engine()
     try:
-        async with engine.connect() as conn:
+        async with eng.connect() as conn:
             await conn.execute(text('SELECT 1'))
         # keep public alias pointing to underlying engine
-        global engine as _public_engine
-        _public_engine = _engine
-        return engine
+        global engine
+        engine = _engine
+        return eng
     except Exception:
         if _ENGINE_URL != DEFAULT_SQLITE_URL:
-            engine = init_engine(DEFAULT_SQLITE_URL)
-            async with engine.connect() as conn:
+            eng = init_engine(DEFAULT_SQLITE_URL)
+            async with eng.connect() as conn:
                 await conn.execute(text('SELECT 1'))
-            return engine
+            return eng
         raise
 
 
