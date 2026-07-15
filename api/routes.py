@@ -4,8 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .db import get_db
-from .services import fetch_kpis_from_db
+from .services import fetch_kpis_from_db, ai_insights_query
 from etl.pipeline import get_dashboard_summary, predict_sales, train_model
+from .auth import login, get_current_user
+from fastapi import Depends
+from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter()
 
@@ -52,9 +55,13 @@ async def forecast():
     return {"status": "ok", "forecast": summary.get('forecast')}
 
 @router.get('/ai-insights')
-async def ai_insights():
-    summary = get_dashboard_summary()
-    return {"status": "ok", "insights": summary.get('ai_insights')}
+async def ai_insights(q: str = "revenue trend", db: AsyncSession = Depends(get_db)):
+    # Use a simple AI-analyst mapping to translate the query into SQL and execute
+    try:
+        results = await ai_insights_query(q, db)
+        return {"status": "ok", "query": q, "results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get('/reports')
 async def reports():
@@ -71,3 +78,8 @@ async def predict(payload: dict):
 @router.post('/train')
 async def train():
     return train_model()
+
+
+@router.post('/token')
+async def token(form_data: OAuth2PasswordRequestForm = Depends()):
+    return login(form_data)

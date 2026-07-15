@@ -6,6 +6,7 @@ from starlette.responses import HTMLResponse
 
 from etl.pipeline import ensure_dataset, get_dashboard_summary, predict_sales, train_model
 from .routes import router as api_router
+from .ws import router as ws_router
 from . import db
 
 app = FastAPI(title="Retail Intelligence Platform", version="1.0.0")
@@ -15,6 +16,7 @@ templates = Jinja2Templates(directory="dashboard")
 
 # Include modular API routes
 app.include_router(api_router, prefix="/api")
+app.include_router(ws_router)
 
 
 @app.get("/", response_class=HTMLResponse)

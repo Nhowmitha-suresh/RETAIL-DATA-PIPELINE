@@ -7,6 +7,34 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from etl.pipeline import get_dashboard_summary
+from sqlalchemy.ext.asyncio import AsyncEngine
+from . import db as db_module
+
+
+async def execute_sql(sql: str):
+    # lightweight executor using engine
+    engine: AsyncEngine = db_module.engine
+    async with engine.connect() as conn:
+        r = await conn.execute(text(sql))
+        try:
+            rows = r.fetchall()
+            # convert RowProxy to list of dicts
+            results = [dict(row._mapping) for row in rows]
+        except Exception:
+            results = {"rows_affected": r.rowcount}
+    return results
+
+
+async def ai_insights_query(prompt: str, session: AsyncSession):
+    # Very basic rule-based "AI analyst" that maps intents to SQL templates
+    prompt_l = prompt.lower()
+    if 'decrease' in prompt_l and 'revenue' in prompt_l:
+        sql = "SELECT month, SUM(selling_price) AS revenue FROM orders GROUP BY month ORDER BY month DESC LIMIT 12;"
+    elif 'highest-selling' in prompt_l or 'top selling' in prompt_l:
+        sql = "SELECT product_id, SUM(quantity) AS qty FROM order_items GROUP BY product_id ORDER BY qty DESC LIMIT 10;"
+    else:
+        sql = "SELECT COUNT(*) AS orders, SUM(selling_price) AS revenue FROM orders;"
+    return await execute_sql(sql)
 
 async def fetch_kpis_from_db(session: AsyncSession) -> Dict[str, Any]:
     # Example KPI queries - optimized queries should be used in production
