@@ -6,6 +6,12 @@ from sqlalchemy import update, delete, insert
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.future import select as future_select
 
+
+def _filter_payload(model, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Keep only keys that map to the model's table columns."""
+    cols = set(model.__table__.columns.keys())
+    return {k: v for k, v in payload.items() if k in cols}
+
 async def get_kpis(session: AsyncSession) -> Dict[str, Any]:
     # Aggregated KPIs
     q = select(func.count().label('orders'), func.sum(Order.selling_price).label('revenue'), func.sum(Order.profit).label('profit'))
@@ -31,10 +37,11 @@ async def get_customer_count(session: AsyncSession) -> int:
 
 
 async def create_customer(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
-    stmt = insert(Customer).values(**payload).returning(Customer.customer_id)
-    r = await session.execute(stmt)
+    obj = Customer(**payload)
+    session.add(obj)
+    await session.flush()
     await session.commit()
-    return {"customer_id": str(r.scalar())}
+    return {"customer_id": str(obj.customer_id)}
 
 
 async def get_customer(session: AsyncSession, customer_id: str) -> Dict[str, Any] | None:
@@ -76,10 +83,11 @@ async def list_customers(session: AsyncSession, limit: int = 50, offset: int = 0
 
 
 async def create_product(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
-    stmt = insert(Product).values(**payload).returning(Product.product_id)
-    r = await session.execute(stmt)
+    obj = Product(**payload)
+    session.add(obj)
+    await session.flush()
     await session.commit()
-    return {"product_id": str(r.scalar())}
+    return {"product_id": str(obj.product_id)}
 
 
 async def get_product(session: AsyncSession, product_id: str) -> Dict[str, Any] | None:
@@ -138,10 +146,11 @@ async def get_order(session: AsyncSession, order_id: str) -> Dict[str, Any] | No
 
 
 async def create_order(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
-    stmt = insert(Order).values(**payload).returning(Order.order_id)
-    r = await session.execute(stmt)
+    obj = Order(**payload)
+    session.add(obj)
+    await session.flush()
     await session.commit()
-    return {"order_id": str(r.scalar())}
+    return {"order_id": str(obj.order_id)}
 
 
 async def update_order(session: AsyncSession, order_id: str, payload: Dict[str, Any]) -> bool:
@@ -160,10 +169,11 @@ async def delete_order(session: AsyncSession, order_id: str) -> bool:
 
 # Suppliers CRUD
 async def create_supplier(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
-    stmt = insert(Supplier).values(**payload).returning(Supplier.supplier_id)
-    r = await session.execute(stmt)
+    obj = Supplier(**payload)
+    session.add(obj)
+    await session.flush()
     await session.commit()
-    return {"supplier_id": str(r.scalar())}
+    return {"supplier_id": str(obj.supplier_id)}
 
 
 async def get_supplier(session: AsyncSession, supplier_id: str) -> Dict[str, Any] | None:
@@ -204,10 +214,11 @@ async def list_suppliers(session: AsyncSession, limit: int = 50, offset: int = 0
 
 # Stores CRUD
 async def create_store(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
-    stmt = insert(Store).values(**payload).returning(Store.store_id)
-    r = await session.execute(stmt)
+    obj = Store(**payload)
+    session.add(obj)
+    await session.flush()
     await session.commit()
-    return {"store_id": str(r.scalar())}
+    return {"store_id": str(obj.store_id)}
 
 
 async def get_store(session: AsyncSession, store_id: str) -> Dict[str, Any] | None:
@@ -248,10 +259,11 @@ async def list_stores(session: AsyncSession, limit: int = 50, offset: int = 0, q
 
 # Warehouses CRUD
 async def create_warehouse(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
-    stmt = insert(Warehouse).values(**payload).returning(Warehouse.warehouse_id)
-    r = await session.execute(stmt)
+    obj = Warehouse(**payload)
+    session.add(obj)
+    await session.flush()
     await session.commit()
-    return {"warehouse_id": str(r.scalar())}
+    return {"warehouse_id": str(obj.warehouse_id)}
 
 
 async def get_warehouse(session: AsyncSession, warehouse_id: str) -> Dict[str, Any] | None:
@@ -292,10 +304,11 @@ async def list_warehouses(session: AsyncSession, limit: int = 50, offset: int = 
 
 # Order Items CRUD
 async def create_order_item(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
-    stmt = insert(OrderItem).values(**payload).returning(OrderItem.item_id)
-    r = await session.execute(stmt)
+    obj = OrderItem(**payload)
+    session.add(obj)
+    await session.flush()
     await session.commit()
-    return {"item_id": str(r.scalar())}
+    return {"item_id": str(obj.item_id)}
 
 
 async def get_order_item(session: AsyncSession, item_id: str) -> Dict[str, Any] | None:
@@ -336,10 +349,11 @@ async def list_order_items(session: AsyncSession, limit: int = 50, offset: int =
 
 # Reviews CRUD
 async def create_review(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
-    stmt = insert(Review).values(**payload).returning(Review.review_id)
-    r = await session.execute(stmt)
+    obj = Review(**payload)
+    session.add(obj)
+    await session.flush()
     await session.commit()
-    return {"review_id": str(r.scalar())}
+    return {"review_id": str(obj.review_id)}
 
 
 async def get_review(session: AsyncSession, review_id: str) -> Dict[str, Any] | None:
@@ -380,10 +394,11 @@ async def list_reviews(session: AsyncSession, limit: int = 50, offset: int = 0, 
 
 # Promotions CRUD
 async def create_promotion(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
-    stmt = insert(Promotion).values(**payload).returning(Promotion.promotion_id)
-    r = await session.execute(stmt)
+    obj = Promotion(**payload)
+    session.add(obj)
+    await session.flush()
     await session.commit()
-    return {"promotion_id": str(r.scalar())}
+    return {"promotion_id": str(obj.promotion_id)}
 
 
 async def get_promotion(session: AsyncSession, promotion_id: str) -> Dict[str, Any] | None:
