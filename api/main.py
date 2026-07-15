@@ -15,7 +15,13 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('retail')
 from . import db
 
-app = FastAPI(title="Retail Intelligence Platform", version="1.0.0")
+app = FastAPI(
+    title="Retail Intelligence Platform",
+    version="1.0.0",
+    description="Enterprise retail analytics backend with CRUD APIs, AI insights, and live WebSocket updates.",
+    contact={"name": "Retail API Support", "email": "support@example.com"},
+    license_info={"name": "MIT", "url": "https://opensource.org/licenses/MIT"},
+)
 app.mount("/static", StaticFiles(directory="dashboard"), name="static")
 
 templates = Jinja2Templates(directory="dashboard")
@@ -40,6 +46,11 @@ async def health() -> dict:
 async def startup_event():
     # Eagerly ensure dataset exists (keeps backward compatibility)
     ensure_dataset()
+    # Create local SQLite schema when PostgreSQL is not configured
+    try:
+        await db.create_schema()
+    except Exception:
+        pass
 
 
 @app.on_event("shutdown")

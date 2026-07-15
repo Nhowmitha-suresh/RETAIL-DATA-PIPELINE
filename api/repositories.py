@@ -1,7 +1,7 @@
 from typing import Dict, Any, List, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc, text
-from .models import Order, Product, Customer
+from .models import Order, Product, Customer, Supplier, Warehouse, Store, OrderItem, Review, Promotion
 from sqlalchemy import update, delete, insert
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.future import select as future_select
@@ -156,3 +156,267 @@ async def delete_order(session: AsyncSession, order_id: str) -> bool:
     r = await session.execute(stmt)
     await session.commit()
     return r.rowcount > 0
+
+
+# Suppliers CRUD
+async def create_supplier(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
+    stmt = insert(Supplier).values(**payload).returning(Supplier.supplier_id)
+    r = await session.execute(stmt)
+    await session.commit()
+    return {"supplier_id": str(r.scalar())}
+
+
+async def get_supplier(session: AsyncSession, supplier_id: str) -> Dict[str, Any] | None:
+    q = future_select(Supplier).where(Supplier.supplier_id == supplier_id)
+    r = await session.execute(q)
+    obj = r.scalar_one_or_none()
+    if not obj:
+        return None
+    return {"supplier_id": str(obj.supplier_id), "name": obj.name, "contact_info": obj.contact_info}
+
+
+async def update_supplier(session: AsyncSession, supplier_id: str, payload: Dict[str, Any]) -> bool:
+    stmt = update(Supplier).where(Supplier.supplier_id == supplier_id).values(**payload)
+    r = await session.execute(stmt)
+    await session.commit()
+    return r.rowcount > 0
+
+
+async def delete_supplier(session: AsyncSession, supplier_id: str) -> bool:
+    stmt = delete(Supplier).where(Supplier.supplier_id == supplier_id)
+    r = await session.execute(stmt)
+    await session.commit()
+    return r.rowcount > 0
+
+
+async def list_suppliers(session: AsyncSession, limit: int = 50, offset: int = 0, q: str | None = None, sort: str | None = None):
+    base = select(Supplier)
+    if q:
+        like = f"%{q}%"
+        base = base.where(Supplier.name.ilike(like))
+    if sort and hasattr(Supplier, sort):
+        base = base.order_by(getattr(Supplier, sort))
+    base = base.limit(limit).offset(offset)
+    r = await session.execute(base)
+    rows = r.scalars().all()
+    return [{"supplier_id": str(row.supplier_id), "name": row.name} for row in rows]
+
+
+# Stores CRUD
+async def create_store(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
+    stmt = insert(Store).values(**payload).returning(Store.store_id)
+    r = await session.execute(stmt)
+    await session.commit()
+    return {"store_id": str(r.scalar())}
+
+
+async def get_store(session: AsyncSession, store_id: str) -> Dict[str, Any] | None:
+    q = future_select(Store).where(Store.store_id == store_id)
+    r = await session.execute(q)
+    obj = r.scalar_one_or_none()
+    if not obj:
+        return None
+    return {"store_id": str(obj.store_id), "name": obj.name, "city": obj.city, "state": obj.state, "region": obj.region}
+
+
+async def update_store(session: AsyncSession, store_id: str, payload: Dict[str, Any]) -> bool:
+    stmt = update(Store).where(Store.store_id == store_id).values(**payload)
+    r = await session.execute(stmt)
+    await session.commit()
+    return r.rowcount > 0
+
+
+async def delete_store(session: AsyncSession, store_id: str) -> bool:
+    stmt = delete(Store).where(Store.store_id == store_id)
+    r = await session.execute(stmt)
+    await session.commit()
+    return r.rowcount > 0
+
+
+async def list_stores(session: AsyncSession, limit: int = 50, offset: int = 0, q: str | None = None, sort: str | None = None):
+    base = select(Store)
+    if q:
+        like = f"%{q}%"
+        base = base.where((Store.name.ilike(like)) | (Store.city.ilike(like)))
+    if sort and hasattr(Store, sort):
+        base = base.order_by(getattr(Store, sort))
+    base = base.limit(limit).offset(offset)
+    r = await session.execute(base)
+    rows = r.scalars().all()
+    return [{"store_id": str(row.store_id), "name": row.name, "city": row.city, "state": row.state, "region": row.region} for row in rows]
+
+
+# Warehouses CRUD
+async def create_warehouse(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
+    stmt = insert(Warehouse).values(**payload).returning(Warehouse.warehouse_id)
+    r = await session.execute(stmt)
+    await session.commit()
+    return {"warehouse_id": str(r.scalar())}
+
+
+async def get_warehouse(session: AsyncSession, warehouse_id: str) -> Dict[str, Any] | None:
+    q = future_select(Warehouse).where(Warehouse.warehouse_id == warehouse_id)
+    r = await session.execute(q)
+    obj = r.scalar_one_or_none()
+    if not obj:
+        return None
+    return {"warehouse_id": str(obj.warehouse_id), "name": obj.name, "city": obj.city, "region": obj.region}
+
+
+async def update_warehouse(session: AsyncSession, warehouse_id: str, payload: Dict[str, Any]) -> bool:
+    stmt = update(Warehouse).where(Warehouse.warehouse_id == warehouse_id).values(**payload)
+    r = await session.execute(stmt)
+    await session.commit()
+    return r.rowcount > 0
+
+
+async def delete_warehouse(session: AsyncSession, warehouse_id: str) -> bool:
+    stmt = delete(Warehouse).where(Warehouse.warehouse_id == warehouse_id)
+    r = await session.execute(stmt)
+    await session.commit()
+    return r.rowcount > 0
+
+
+async def list_warehouses(session: AsyncSession, limit: int = 50, offset: int = 0, q: str | None = None, sort: str | None = None):
+    base = select(Warehouse)
+    if q:
+        like = f"%{q}%"
+        base = base.where((Warehouse.name.ilike(like)) | (Warehouse.city.ilike(like)) | (Warehouse.region.ilike(like)))
+    if sort and hasattr(Warehouse, sort):
+        base = base.order_by(getattr(Warehouse, sort))
+    base = base.limit(limit).offset(offset)
+    r = await session.execute(base)
+    rows = r.scalars().all()
+    return [{"warehouse_id": str(row.warehouse_id), "name": row.name, "city": row.city, "region": row.region} for row in rows]
+
+
+# Order Items CRUD
+async def create_order_item(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
+    stmt = insert(OrderItem).values(**payload).returning(OrderItem.item_id)
+    r = await session.execute(stmt)
+    await session.commit()
+    return {"item_id": str(r.scalar())}
+
+
+async def get_order_item(session: AsyncSession, item_id: str) -> Dict[str, Any] | None:
+    q = future_select(OrderItem).where(OrderItem.item_id == item_id)
+    r = await session.execute(q)
+    obj = r.scalar_one_or_none()
+    if not obj:
+        return None
+    return {"item_id": str(obj.item_id), "order_id": obj.order_id, "product_id": obj.product_id, "quantity": obj.quantity, "unit_price": float(obj.unit_price or 0.0), "total_price": float(obj.total_price or 0.0)}
+
+
+async def update_order_item(session: AsyncSession, item_id: str, payload: Dict[str, Any]) -> bool:
+    stmt = update(OrderItem).where(OrderItem.item_id == item_id).values(**payload)
+    r = await session.execute(stmt)
+    await session.commit()
+    return r.rowcount > 0
+
+
+async def delete_order_item(session: AsyncSession, item_id: str) -> bool:
+    stmt = delete(OrderItem).where(OrderItem.item_id == item_id)
+    r = await session.execute(stmt)
+    await session.commit()
+    return r.rowcount > 0
+
+
+async def list_order_items(session: AsyncSession, limit: int = 50, offset: int = 0, q: str | None = None, sort: str | None = None):
+    base = select(OrderItem)
+    if q:
+        like = f"%{q}%"
+        base = base.where((OrderItem.order_id.ilike(like)) | (OrderItem.product_id.ilike(like)))
+    if sort and hasattr(OrderItem, sort):
+        base = base.order_by(getattr(OrderItem, sort))
+    base = base.limit(limit).offset(offset)
+    r = await session.execute(base)
+    rows = r.scalars().all()
+    return [{"item_id": str(row.item_id), "order_id": row.order_id, "product_id": row.product_id, "quantity": row.quantity, "total_price": float(row.total_price or 0.0)} for row in rows]
+
+
+# Reviews CRUD
+async def create_review(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
+    stmt = insert(Review).values(**payload).returning(Review.review_id)
+    r = await session.execute(stmt)
+    await session.commit()
+    return {"review_id": str(r.scalar())}
+
+
+async def get_review(session: AsyncSession, review_id: str) -> Dict[str, Any] | None:
+    q = future_select(Review).where(Review.review_id == review_id)
+    r = await session.execute(q)
+    obj = r.scalar_one_or_none()
+    if not obj:
+        return None
+    return {"review_id": str(obj.review_id), "order_id": obj.order_id, "rating": float(obj.rating or 0.0), "comment": obj.comment}
+
+
+async def update_review(session: AsyncSession, review_id: str, payload: Dict[str, Any]) -> bool:
+    stmt = update(Review).where(Review.review_id == review_id).values(**payload)
+    r = await session.execute(stmt)
+    await session.commit()
+    return r.rowcount > 0
+
+
+async def delete_review(session: AsyncSession, review_id: str) -> bool:
+    stmt = delete(Review).where(Review.review_id == review_id)
+    r = await session.execute(stmt)
+    await session.commit()
+    return r.rowcount > 0
+
+
+async def list_reviews(session: AsyncSession, limit: int = 50, offset: int = 0, q: str | None = None, sort: str | None = None):
+    base = select(Review)
+    if q:
+        like = f"%{q}%"
+        base = base.where(Review.comment.ilike(like))
+    if sort and hasattr(Review, sort):
+        base = base.order_by(getattr(Review, sort))
+    base = base.limit(limit).offset(offset)
+    r = await session.execute(base)
+    rows = r.scalars().all()
+    return [{"review_id": str(row.review_id), "order_id": row.order_id, "rating": float(row.rating or 0.0), "comment": row.comment} for row in rows]
+
+
+# Promotions CRUD
+async def create_promotion(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
+    stmt = insert(Promotion).values(**payload).returning(Promotion.promotion_id)
+    r = await session.execute(stmt)
+    await session.commit()
+    return {"promotion_id": str(r.scalar())}
+
+
+async def get_promotion(session: AsyncSession, promotion_id: str) -> Dict[str, Any] | None:
+    q = future_select(Promotion).where(Promotion.promotion_id == promotion_id)
+    r = await session.execute(q)
+    obj = r.scalar_one_or_none()
+    if not obj:
+        return None
+    return {"promotion_id": str(obj.promotion_id), "code": obj.code, "description": obj.description, "discount_pct": float(obj.discount_pct or 0.0), "start_date": obj.start_date.isoformat() if obj.start_date else None, "end_date": obj.end_date.isoformat() if obj.end_date else None}
+
+
+async def update_promotion(session: AsyncSession, promotion_id: str, payload: Dict[str, Any]) -> bool:
+    stmt = update(Promotion).where(Promotion.promotion_id == promotion_id).values(**payload)
+    r = await session.execute(stmt)
+    await session.commit()
+    return r.rowcount > 0
+
+
+async def delete_promotion(session: AsyncSession, promotion_id: str) -> bool:
+    stmt = delete(Promotion).where(Promotion.promotion_id == promotion_id)
+    r = await session.execute(stmt)
+    await session.commit()
+    return r.rowcount > 0
+
+
+async def list_promotions(session: AsyncSession, limit: int = 50, offset: int = 0, q: str | None = None, sort: str | None = None):
+    base = select(Promotion)
+    if q:
+        like = f"%{q}%"
+        base = base.where((Promotion.code.ilike(like)) | (Promotion.description.ilike(like)))
+    if sort and hasattr(Promotion, sort):
+        base = base.order_by(getattr(Promotion, sort))
+    base = base.limit(limit).offset(offset)
+    r = await session.execute(base)
+    rows = r.scalars().all()
+    return [{"promotion_id": str(row.promotion_id), "code": row.code, "description": row.description, "discount_pct": float(row.discount_pct or 0.0)} for row in rows]

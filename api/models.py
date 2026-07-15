@@ -1,13 +1,15 @@
-from sqlalchemy import Column, String, Integer, Numeric, DateTime, Boolean, ForeignKey, Text
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import Column, String, Integer, Numeric, DateTime, Boolean, ForeignKey, JSON
 from sqlalchemy.orm import relationship, declarative_base
 import uuid
 
 Base = declarative_base()
 
+def uuid_string():
+    return str(uuid.uuid4())
+
 class Customer(Base):
     __tablename__ = 'customers'
-    customer_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    customer_id = Column(String(36), primary_key=True, default=uuid_string)
     external_id = Column(String, unique=True, index=True)
     gender = Column(String)
     age_group = Column(String)
@@ -17,33 +19,33 @@ class Customer(Base):
 
 class Supplier(Base):
     __tablename__ = 'suppliers'
-    supplier_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    supplier_id = Column(String(36), primary_key=True, default=uuid_string)
     name = Column(String)
-    contact_info = Column(JSONB)
+    contact_info = Column(JSON)
 
 class Product(Base):
     __tablename__ = 'products'
-    product_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    product_id = Column(String(36), primary_key=True, default=uuid_string)
     external_id = Column(String, unique=True, index=True)
     name = Column(String)
     category = Column(String, index=True)
     subcategory = Column(String)
     brand = Column(String, index=True)
-    supplier_id = Column(UUID(as_uuid=True), ForeignKey('suppliers.supplier_id'))
+    supplier_id = Column(String(36), ForeignKey('suppliers.supplier_id'))
     cost = Column(Numeric(12,2))
     selling_price = Column(Numeric(12,2))
     supplier = relationship('Supplier')
 
 class Warehouse(Base):
     __tablename__ = 'warehouses'
-    warehouse_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    warehouse_id = Column(String(36), primary_key=True, default=uuid_string)
     name = Column(String)
     city = Column(String)
     region = Column(String)
 
 class Store(Base):
     __tablename__ = 'stores'
-    store_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    store_id = Column(String(36), primary_key=True, default=uuid_string)
     name = Column(String)
     city = Column(String)
     state = Column(String)
@@ -51,13 +53,13 @@ class Store(Base):
 
 class Order(Base):
     __tablename__ = 'orders'
-    order_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    order_id = Column(String(36), primary_key=True, default=uuid_string)
     transaction_id = Column(String, unique=True, index=True)
     invoice_id = Column(String)
-    customer_id = Column(UUID(as_uuid=True), ForeignKey('customers.customer_id'))
-    product_id = Column(UUID(as_uuid=True), ForeignKey('products.product_id'))
+    customer_id = Column(String(36), ForeignKey('customers.customer_id'))
+    product_id = Column(String(36), ForeignKey('products.product_id'))
     store = Column(String, index=True)
-    warehouse_id = Column(UUID(as_uuid=True), ForeignKey('warehouses.warehouse_id'))
+    warehouse_id = Column(String(36), ForeignKey('warehouses.warehouse_id'))
     employee_id = Column(String)
     category = Column(String)
     subcategory = Column(String)
@@ -85,11 +87,29 @@ class Order(Base):
 
 class OrderItem(Base):
     __tablename__ = 'order_items'
-    item_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    order_id = Column(UUID(as_uuid=True), ForeignKey('orders.order_id'))
-    product_id = Column(UUID(as_uuid=True), ForeignKey('products.product_id'))
+    item_id = Column(String(36), primary_key=True, default=uuid_string)
+    order_id = Column(String(36), ForeignKey('orders.order_id'))
+    product_id = Column(String(36), ForeignKey('products.product_id'))
     quantity = Column(Integer)
     unit_price = Column(Numeric(12,2))
     total_price = Column(Numeric(12,2))
     order = relationship('Order')
     product = relationship('Product')
+
+class Review(Base):
+    __tablename__ = 'reviews'
+    review_id = Column(String(36), primary_key=True, default=uuid_string)
+    order_id = Column(String(36), ForeignKey('orders.order_id'))
+    rating = Column(Numeric(3,2))
+    comment = Column(String)
+    created_at = Column(DateTime)
+    order = relationship('Order')
+
+class Promotion(Base):
+    __tablename__ = 'promotions'
+    promotion_id = Column(String(36), primary_key=True, default=uuid_string)
+    code = Column(String, unique=True, index=True)
+    description = Column(String)
+    discount_pct = Column(Numeric(5,2))
+    start_date = Column(DateTime)
+    end_date = Column(DateTime)

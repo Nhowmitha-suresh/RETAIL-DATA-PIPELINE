@@ -89,12 +89,43 @@ const fetchSummary = async () => {
     const response = await fetch('/api/summary');
     if (!response.ok) throw new Error('Unable to load summary');
     const result = await response.json();
-    appState.summary = result;
-    return result;
+    const summary = result?.summary || result;
+    appState.summary = summary;
+    return summary;
   } catch (error) {
     console.error(error);
     showToast('Failed to fetch summary', 'error');
   }
+};
+
+const initRealtime = () => {
+  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  const socket = new WebSocket(`${protocol}://${window.location.host}/ws/realtime`);
+
+  socket.addEventListener('open', () => {
+    showToast('Realtime updates connected', 'success');
+  });
+
+  socket.addEventListener('message', event => {
+    try {
+      const data = event.data;
+      console.log('Realtime event:', data);
+      showToast('Realtime update received', 'info');
+    } catch (error) {
+      console.error('Realtime parse error', error);
+    }
+  });
+
+  socket.addEventListener('close', () => {
+    showToast('Realtime disconnected, retrying...', 'warning');
+    setTimeout(initRealtime, 3000);
+  });
+
+  socket.addEventListener('error', () => {
+    console.error('Realtime socket error');
+  });
+
+  appState.socket = socket;
 };
 
 const renderKpiCards = cards => {
@@ -123,10 +154,14 @@ const buildExecutiveCards = summary => [
 
 const renderDashboardPage = summary => {
   renderKpiCards(buildExecutiveCards(summary));
-  document.getElementById('topRevenue').textContent = formatCurrency(summary.top_region_revenue);
-  document.getElementById('topCategory').textContent = summary.top_category;
-  document.getElementById('topBrand').textContent = summary.top_brand;
-  document.getElementById('topChannel').textContent = summary.top_channel;
+  const topRevenue = document.getElementById('topRevenue');
+  if (topRevenue) topRevenue.textContent = formatCurrency(summary.top_region_revenue || 0);
+  const topCategory = document.getElementById('topCategory');
+  if (topCategory) topCategory.textContent = summary.top_category || 'N/A';
+  const topBrand = document.getElementById('topBrand');
+  if (topBrand) topBrand.textContent = summary.top_brand || 'N/A';
+  const topChannel = document.getElementById('topChannel');
+  if (topChannel) topChannel.textContent = summary.top_channel || 'N/A';
 };
 
 const initPage = async () => {
@@ -136,6 +171,8 @@ const initPage = async () => {
   renderDashboardPage(summary);
   setActivePage(appState.currentPage);
   initNavigation();
+  initRealtime();
+  initRealtime();
 };
 
 window.addEventListener('DOMContentLoaded', initPage);
