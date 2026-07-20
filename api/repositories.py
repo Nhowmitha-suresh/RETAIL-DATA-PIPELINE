@@ -37,7 +37,8 @@ async def get_customer_count(session: AsyncSession) -> int:
 
 
 async def create_customer(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
-    obj = Customer(**payload)
+    filtered = _filter_payload(Customer, payload)
+    obj = Customer(**filtered)
     session.add(obj)
     await session.flush()
     await session.commit()
@@ -83,7 +84,8 @@ async def list_customers(session: AsyncSession, limit: int = 50, offset: int = 0
 
 
 async def create_product(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
-    obj = Product(**payload)
+    filtered = _filter_payload(Product, payload)
+    obj = Product(**filtered)
     session.add(obj)
     await session.flush()
     await session.commit()
@@ -146,7 +148,8 @@ async def get_order(session: AsyncSession, order_id: str) -> Dict[str, Any] | No
 
 
 async def create_order(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
-    obj = Order(**payload)
+    filtered = _filter_payload(Order, payload)
+    obj = Order(**filtered)
     session.add(obj)
     await session.flush()
     await session.commit()
@@ -169,7 +172,8 @@ async def delete_order(session: AsyncSession, order_id: str) -> bool:
 
 # Suppliers CRUD
 async def create_supplier(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
-    obj = Supplier(**payload)
+    filtered = _filter_payload(Supplier, payload)
+    obj = Supplier(**filtered)
     session.add(obj)
     await session.flush()
     await session.commit()
@@ -214,7 +218,8 @@ async def list_suppliers(session: AsyncSession, limit: int = 50, offset: int = 0
 
 # Stores CRUD
 async def create_store(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
-    obj = Store(**payload)
+    filtered = _filter_payload(Store, payload)
+    obj = Store(**filtered)
     session.add(obj)
     await session.flush()
     await session.commit()
@@ -259,7 +264,8 @@ async def list_stores(session: AsyncSession, limit: int = 50, offset: int = 0, q
 
 # Warehouses CRUD
 async def create_warehouse(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
-    obj = Warehouse(**payload)
+    filtered = _filter_payload(Warehouse, payload)
+    obj = Warehouse(**filtered)
     session.add(obj)
     await session.flush()
     await session.commit()
@@ -304,7 +310,8 @@ async def list_warehouses(session: AsyncSession, limit: int = 50, offset: int = 
 
 # Order Items CRUD
 async def create_order_item(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
-    obj = OrderItem(**payload)
+    filtered = _filter_payload(OrderItem, payload)
+    obj = OrderItem(**filtered)
     session.add(obj)
     await session.flush()
     await session.commit()
@@ -349,7 +356,8 @@ async def list_order_items(session: AsyncSession, limit: int = 50, offset: int =
 
 # Reviews CRUD
 async def create_review(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
-    obj = Review(**payload)
+    filtered = _filter_payload(Review, payload)
+    obj = Review(**filtered)
     session.add(obj)
     await session.flush()
     await session.commit()
@@ -394,7 +402,8 @@ async def list_reviews(session: AsyncSession, limit: int = 50, offset: int = 0, 
 
 # Promotions CRUD
 async def create_promotion(session: AsyncSession, payload: Dict[str, Any]) -> Dict[str, Any]:
-    obj = Promotion(**payload)
+    filtered = _filter_payload(Promotion, payload)
+    obj = Promotion(**filtered)
     session.add(obj)
     await session.flush()
     await session.commit()
