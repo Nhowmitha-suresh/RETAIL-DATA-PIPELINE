@@ -25,10 +25,8 @@
           <a href="#sales" class="sidebar-item" data-page="sales"><span>💰</span>Sales</a>
           <a href="#revenue" class="sidebar-item" data-page="revenue"><span>📈</span>Revenue</a>
           <a href="#customers" class="sidebar-item" data-page="customers"><span>👥</span>Customers</a>
-          <a href="#products" class="sidebar-item" data-page="products"><span>🛍️</span>Products</a>
           <a href="#inventory" class="sidebar-item" data-page="inventory"><span>📦</span>Inventory</a>
           <a href="#finance" class="sidebar-item" data-page="finance"><span>💳</span>Finance</a>
-          <a href="#marketing" class="sidebar-item" data-page="marketing"><span>📣</span>Marketing</a>
           <a href="#forecasting" class="sidebar-item" data-page="forecasting"><span>🔮</span>Forecasting</a>
           <a href="#ai-insights" class="sidebar-item" data-page="ai-insights"><span>🧠</span>AI Insights</a>
           <a href="#reports" class="sidebar-item" data-page="reports"><span>🗂️</span>Reports</a>
@@ -41,18 +39,38 @@
           <div>
             <p class="section-label">Enterprise Platform</p>
             <h1 id="pageTitle">Executive Overview</h1>
-            <p class="section-description">Real-time retail analytics, AI insights, forecasting and reports.</p>
+            <p class="section-description">Live retail metrics, AI-driven insights, forecasting and operational actions.</p>
           </div>
           <div class="header-actions">
             <button class="action-button" id="refreshSummary">Refresh</button>
-            <button class="action-button" id="runForecast">Forecast</button>
-            <button class="action-button" id="commandPalette">Ctrl+K</button>
+            <button class="action-button" id="runForecast">Run Forecast</button>
+            <button class="action-button" id="commandPalette">Search Actions</button>
           </div>
         </section>
 
         <section class="page-section" data-page="dashboard">
+          <div class="dashboard-summary">
+            <article class="summary-card">
+              <p>Live KPI status</p>
+              <strong id="summaryLiveStatus">Connected</strong>
+            </article>
+            <article class="summary-card">
+              <p>Last updated</p>
+              <strong id="summaryUpdated">—</strong>
+            </article>
+            <article class="summary-card">
+              <p>Active filters</p>
+              <strong id="summaryFilters">All regions, all categories</strong>
+            </article>
+            <article class="summary-card summary-action-card">
+              <p>Quick actions</p>
+              <button class="icon-button" id="refreshFilters">Refresh filters</button>
+              <button class="icon-button" id="showNotifications">View alerts</button>
+            </article>
+          </div>
+
           <div class="filter-row">
-            <label><span>Date Range</span><select id="filterDateRange"><option>Last 7 Days</option><option>Last 30 Days</option><option>This Month</option><option>This Quarter</option><option>This Year</option></select></label>
+            <label><span>Date Range</span><select id="filterDateRange"><option>Last 7 Days</option><option selected>Last 30 Days</option><option>This Month</option><option>This Quarter</option><option>This Year</option></select></label>
             <label><span>Category</span><select id="filterCategory"><option>All Categories</option><option>Electronics</option><option>Home</option><option>Fashion</option><option>Groceries</option></select></label>
             <label><span>Region</span><select id="filterRegion"><option>All Regions</option><option>North</option><option>South</option><option>East</option><option>West</option><option>Central</option></select></label>
             <label><span>Channel</span><select id="filterChannel"><option>All Channels</option><option>Online</option><option>In-Store</option><option>Mobile App</option></select></label>
@@ -67,15 +85,15 @@
             <section class="chart-panel"><h2>Customer Segmentation</h2><canvas id="chartCustomerSegment"></canvas></section>
           </div>
 
-          <section class="insight-panel"><h2>AI Recommendations</h2><div id="aiInsights"></div></section>
+          <section class="insight-panel"><h2>AI Recommendations</h2><div id="aiInsights" class="insight-grid"></div></section>
         </section>
 
         <section class="page-section" data-page="sales" hidden>
           <div class="filter-row">
-            <label><span>Date Range</span><select><option>Last 7 Days</option><option>Last 30 Days</option><option>This Month</option><option>This Year</option></select></label>
-            <label><span>Store</span><select><option>All Stores</option><option>Store A</option><option>Store B</option></select></label>
-            <label><span>State</span><select><option>All States</option><option>North State</option><option>South State</option></select></label>
-            <label><span>Payment</span><select><option>All Methods</option><option>Credit Card</option><option>UPI</option></select></label>
+            <label><span>Date Range</span><select id="salesDateRange"><option>Last 7 Days</option><option selected>Last 30 Days</option><option>This Month</option><option>This Year</option></select></label>
+            <label><span>Store</span><select id="salesStore"><option>All Stores</option><option>Store A</option><option>Store B</option><option>Store C</option></select></label>
+            <label><span>State</span><select id="salesState"><option>All States</option><option>North</option><option>South</option><option>East</option><option>West</option></select></label>
+            <label><span>Payment</span><select id="salesPayment"><option>All Methods</option><option>Credit Card</option><option>UPI</option><option>Cash</option></select></label>
           </div>
           <div class="chart-grid">
             <section class="chart-panel"><h2>Sales Trend</h2><canvas id="chartSalesTrend"></canvas></section>
@@ -86,7 +104,7 @@
 
         <section class="page-section" data-page="revenue" hidden>
           <div class="filter-row">
-            <label><span>Year</span><select><option>2024</option><option>2023</option></select></label>
+            <label><span>Year</span><select><option selected>2024</option><option>2023</option></select></label>
             <label><span>Quarter</span><select><option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option></select></label>
             <label><span>Category</span><select><option>All Categories</option><option>Electronics</option></select></label>
             <label><span>Region</span><select><option>All Regions</option><option>North</option></select></label>
@@ -102,19 +120,12 @@
           <div class="filter-row">
             <label><span>Customer Type</span><select><option>All Types</option><option>Retail</option><option>Wholesale</option></select></label>
             <label><span>Gender</span><select><option>All</option><option>Male</option><option>Female</option></select></label>
-            <label><span>Age Group</span><select><option>All Ages</option><option>25-34</option></select></label>
+            <label><span>Age Group</span><select><option>All Ages</option><option>25-34</option><option>35-44</option></select></label>
             <label><span>Membership</span><select><option>All</option><option>Gold</option><option>Platinum</option></select></label>
           </div>
           <div class="chart-grid">
             <section class="chart-panel"><h2>Customer Growth</h2><canvas id="chartCustomerGrowth"></canvas></section>
             <section class="chart-panel"><h2>Lifetime Value</h2><canvas id="chartCustomerLtv"></canvas></section>
-          </div>
-        </section>
-
-        <section class="page-section" data-page="products" hidden>
-          <div class="chart-grid">
-            <section class="chart-panel"><h2>Category Performance</h2><canvas id="chartCategoryPerformance"></canvas></section>
-            <section class="chart-panel"><h2>Brand Performance</h2><canvas id="chartBrandPerformance"></canvas></section>
           </div>
         </section>
 
@@ -147,7 +158,7 @@
         </section>
 
         <section class="page-section" data-page="ai-insights" hidden>
-          <div class="insight-panel"><h2>AI Insights</h2><div id="aiInsightsPage"></div></div>
+          <div class="insight-panel"><h2>AI Insights</h2><div id="aiInsightsPage" class="insight-grid"></div></div>
         </section>
 
         <section class="page-section" data-page="reports" hidden>
